@@ -198,7 +198,7 @@ def _prepare_post_view(post: Dict) -> Dict:
     return result
 
 
-@app.get("/", response_class=HTMLResponse)
+@app.api_route("/", methods=["GET", "HEAD"], response_class=HTMLResponse)
 async def index(
     request: Request,
     page: int = Query(1, ge=1),
