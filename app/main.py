@@ -1,5 +1,9 @@
 import logging
 import os
+import base64
+import hashlib
+import hmac
+import time
 from datetime import datetime
 from math import ceil
 from pathlib import Path
@@ -48,12 +52,63 @@ PAGE_SIZE = int(os.getenv("PAGE_SIZE", "20"))
 AUTH_USER = os.getenv("AUTH_USER") or ""
 AUTH_PASS = os.getenv("AUTH_PASS") or ""
 
+AUTH_TOKEN_SECRET = os.getenv("AUTH_TOKEN_SECRET") or os.getenv("VK_TOKEN") or ""
+FRONTEND_TOKEN_TTL_SECONDS = int(os.getenv("FRONTEND_TOKEN_TTL_SECONDS", "604800"))  # 7 days
+
+
+def _b64url_encode(raw: bytes) -> str:
+    return base64.urlsafe_b64encode(raw).decode("ascii").rstrip("=")
+
+
+def _b64url_decode(value: str) -> bytes:
+    padding = "=" * (-len(value) % 4)
+    return base64.urlsafe_b64decode(f"{value}{padding}")
+
+
+def _generate_frontend_token() -> str:
+    """
+    Stateless frontend auth token: no cookies required.
+    """
+    issued_at = int(time.time())
+    payload = f"{AUTH_USER}|{issued_at}".encode("utf-8")
+    signature = hmac.new(AUTH_TOKEN_SECRET.encode("utf-8"), payload, hashlib.sha256).hexdigest()
+    return f"{_b64url_encode(payload)}.{signature}"
+
+
+def _verify_frontend_token(token: str) -> bool:
+    if not AUTH_USER or not AUTH_PASS:
+        return True
+    if not AUTH_TOKEN_SECRET:
+        return False
+
+    try:
+        payload_b64, signature = token.split(".", 1)
+        payload = _b64url_decode(payload_b64)
+        expected_payload = payload.decode("utf-8")
+        username, issued_at_str = expected_payload.split("|", 1)
+        issued_at = int(issued_at_str)
+    except Exception:
+        return False
+
+    if not hmac.compare_digest(username, AUTH_USER):
+        return False
+
+    expected_signature = hmac.new(
+        AUTH_TOKEN_SECRET.encode("utf-8"),
+        payload,
+        hashlib.sha256,
+    ).hexdigest()
+    if not hmac.compare_digest(signature, expected_signature):
+        return False
+
+    return (int(time.time()) - issued_at) <= FRONTEND_TOKEN_TTL_SECONDS
+
 
 def _is_frontend_authenticated(request: Request) -> bool:
     if not AUTH_USER and not AUTH_PASS:
         return True
-    session_user = request.cookies.get("session_user")
-    return bool(session_user and session_user == AUTH_USER)
+    token = request.query_params.get("frontend_auth") or ""
+    return bool(token) and _verify_frontend_token(token)
 
 
 def _build_pagination(page: int, total_pages: int) -> List[Dict]:
@@ -151,7 +206,9 @@ async def index(
     group_query: str | None = Query(None, alias="group_query"),
     user: str = Depends(basic_auth),
 ) -> HTMLResponse:
-    if not _is_frontend_authenticated(request):
+    is_frontend_authed = _is_frontend_authenticated(request)
+    frontend_auth_token = request.query_params.get("frontend_auth") or "" if is_frontend_authed else ""
+    if not is_frontend_authed:
         return templates.TemplateResponse(
             "login.html",
             {
@@ -222,6 +279,7 @@ async def index(
             "schedule_times": schedule_times,
             "groups": groups,
             "group_query": group_query or "",
+            "frontend_auth_token": frontend_auth_token,
         },
     )
 
@@ -233,9 +291,8 @@ async def login(
     password: str = Form(...),
 ) -> HTMLResponse:
     if AUTH_USER and AUTH_PASS and username == AUTH_USER and password == AUTH_PASS:
-        response = RedirectResponse(url="/", status_code=303)
-        response.set_cookie("session_user", AUTH_USER, httponly=True)
-        return response
+        token = _generate_frontend_token()
+        return RedirectResponse(url=f"/?frontend_auth={token}", status_code=303)
 
     return templates.TemplateResponse(
         "login.html",
@@ -248,9 +305,7 @@ async def login(
 
 @app.get("/logout")
 async def logout(request: Request) -> RedirectResponse:
-    response = RedirectResponse(url="/", status_code=303)
-    response.delete_cookie("session_user")
-    return response
+    return RedirectResponse(url="/", status_code=303)
 
 
 @app.post("/schedule/add")
@@ -258,6 +313,7 @@ async def schedule_add(
     request: Request,
     time_value: str = Form(..., alias="time"),
     user: str = Depends(basic_auth),
+    frontend_auth: str = Form("", alias="frontend_auth"),
 ) -> RedirectResponse:
     from app.storage import load_schedule, save_schedule
 
@@ -266,7 +322,10 @@ async def schedule_add(
         times.append(time_value)
         times = sorted(times)
         save_schedule(times)
-    return RedirectResponse(url="/?tab=schedule", status_code=303)
+    redirect_url = "/?tab=schedule"
+    if frontend_auth:
+        redirect_url = f"{redirect_url}&frontend_auth={frontend_auth}"
+    return RedirectResponse(url=redirect_url, status_code=303)
 
 
 @app.post("/schedule/delete")
@@ -274,14 +333,14 @@ async def schedule_delete(
     request: Request,
     time_value: str = Form(..., alias="time"),
     user: str = Depends(basic_auth),
-) -> RedirectResponse:
+) -> JSONResponse:
     from app.storage import load_schedule, save_schedule
 
     times = load_schedule()
     times_filtered = [t for t in times if t != time_value]
     if len(times_filtered) != len(times):
         save_schedule(times_filtered)
-    return RedirectResponse(url="/?tab=schedule", status_code=303)
+    return JSONResponse({"status": "ok"})
 
 
 @app.post("/groups/delete")
@@ -289,7 +348,7 @@ async def groups_delete(
     request: Request,
     group_id: str = Form(..., alias="group_id"),
     user: str = Depends(basic_auth),
-) -> RedirectResponse:
+) -> JSONResponse:
     from app.storage import load_groups, save_groups
 
     all_groups = load_groups()
@@ -297,7 +356,7 @@ async def groups_delete(
     if len(groups_filtered) != len(all_groups):
         save_groups(groups_filtered)
 
-    return RedirectResponse(url="/?tab=groups", status_code=303)
+    return JSONResponse({"status": "ok"})
 
 
 @app.post("/groups/add")
