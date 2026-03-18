@@ -207,7 +207,7 @@ async def index(
     user: str = Depends(basic_auth),
 ) -> HTMLResponse:
     is_frontend_authed = _is_frontend_authenticated(request)
-    frontend_auth_token = request.query_params.get("frontend_auth") or "" if is_frontend_authed else ""
+    frontend_auth_token = request.query_params.get("frontend_auth") if is_frontend_authed else ""
     if not is_frontend_authed:
         return templates.TemplateResponse(
             "login.html",
