@@ -50,10 +50,6 @@ let pendingGroupId = null;
 let pendingGroupName = null;
 let groupAddModalInstance = null;
 
-const frontendAuthFromQuery = new URLSearchParams(window.location.search).get(
-  "frontend_auth"
-);
-
 
 const performDelete = () => {
   if (!pendingDeleteId || !pendingDeleteButton) {
@@ -317,10 +313,7 @@ const initHandlers = () => {
           if (groupAddModalInstance) {
             groupAddModalInstance.hide();
           }
-          const tokenParam = frontendAuthFromQuery
-            ? `&frontend_auth=${encodeURIComponent(frontendAuthFromQuery)}`
-            : "";
-          window.location.href = `/?tab=groups${tokenParam}`;
+          window.location.href = "/?tab=groups";
         })
         .catch((error) => {
           if (groupAddError) {

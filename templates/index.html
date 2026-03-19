@@ -162,7 +162,6 @@
           <div class="d-flex align-items-center gap-2">
             <form method="get" action="/" class="mb-0">
               <input type="hidden" name="tab" value="{{ active_tab }}">
-              <input type="hidden" name="frontend_auth" value="{{ frontend_auth_token }}">
               <button type="submit" class="btn btn-sm btn-header-primary btn-wide">
                 🔄 Обновить
               </button>
@@ -178,13 +177,13 @@
 
       <ul class="nav nav-tabs mb-3">
         <li class="nav-item">
-          <a class="nav-link {% if active_tab == 'posts' %}active{% endif %}" href="/?tab=posts&frontend_auth={{ frontend_auth_token }}">Посты</a>
+          <a class="nav-link {% if active_tab == 'posts' %}active{% endif %}" href="/?tab=posts">Посты</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link {% if active_tab == 'schedule' %}active{% endif %}" href="/?tab=schedule&frontend_auth={{ frontend_auth_token }}">Расписание</a>
+          <a class="nav-link {% if active_tab == 'schedule' %}active{% endif %}" href="/?tab=schedule">Расписание</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link {% if active_tab == 'groups' %}active{% endif %}" href="/?tab=groups&frontend_auth={{ frontend_auth_token }}">Сообщества</a>
+          <a class="nav-link {% if active_tab == 'groups' %}active{% endif %}" href="/?tab=groups">Сообщества</a>
         </li>
       </ul>
 
@@ -199,23 +198,23 @@
                   </li>
                 {% elif item.type == "number" %}
                   <li class="page-item {% if item.active %}active{% endif %}">
-                    <a class="page-link" href="/?page={{ item.page }}&tab=posts&frontend_auth={{ frontend_auth_token }}">{{ item.page }}</a>
+                    <a class="page-link" href="/?page={{ item.page }}">{{ item.page }}</a>
                   </li>
                 {% elif item.type == "first" %}
                   <li class="page-item {% if item.disabled %}disabled{% endif %}">
-                    <a class="page-link" href="/?page=1&tab=posts&frontend_auth={{ frontend_auth_token }}">&laquo;</a>
+                    <a class="page-link" href="/?page=1">&laquo;</a>
                   </li>
                 {% elif item.type == "prev" %}
                   <li class="page-item {% if item.disabled %}disabled{% endif %}">
-                    <a class="page-link" href="/?page={{ item.page }}&tab=posts&frontend_auth={{ frontend_auth_token }}">&lsaquo;</a>
+                    <a class="page-link" href="/?page={{ item.page }}">&lsaquo;</a>
                   </li>
                 {% elif item.type == "next" %}
                   <li class="page-item {% if item.disabled %}disabled{% endif %}">
-                    <a class="page-link" href="/?page={{ item.page }}&tab=posts&frontend_auth={{ frontend_auth_token }}">&rsaquo;</a>
+                    <a class="page-link" href="/?page={{ item.page }}">&rsaquo;</a>
                   </li>
                 {% elif item.type == "last" %}
                   <li class="page-item {% if item.disabled %}disabled{% endif %}">
-                    <a class="page-link" href="/?page={{ item.page }}&tab=posts&frontend_auth={{ frontend_auth_token }}">&raquo;</a>
+                    <a class="page-link" href="/?page={{ item.page }}">&raquo;</a>
                   </li>
                 {% endif %}
               {% endfor %}
@@ -299,7 +298,6 @@
         <div class="row mb-3">
           <div class="col-12 col-md-6 mx-auto">
             <form method="post" action="/schedule/add" class="d-flex gap-2">
-              <input type="hidden" name="frontend_auth" value="{{ frontend_auth_token }}">
               <input
                 type="time"
                 name="time"
@@ -342,7 +340,6 @@
           <div class="col-12 col-md-8 mx-auto">
             <form method="get" action="/" class="mb-3 d-flex gap-2">
               <input type="hidden" name="tab" value="groups">
-              <input type="hidden" name="frontend_auth" value="{{ frontend_auth_token }}">
               <input
                 type="text"
                 name="group_query"
@@ -402,23 +399,23 @@
                   </li>
                 {% elif item.type == "number" %}
                   <li class="page-item {% if item.active %}active{% endif %}">
-                    <a class="page-link" href="/?page={{ item.page }}&tab=posts&frontend_auth={{ frontend_auth_token }}">{{ item.page }}</a>
+                    <a class="page-link" href="/?page={{ item.page }}">{{ item.page }}</a>
                   </li>
                 {% elif item.type == "first" %}
                   <li class="page-item {% if item.disabled %}disabled{% endif %}">
-                    <a class="page-link" href="/?page=1&tab=posts&frontend_auth={{ frontend_auth_token }}">&laquo;</a>
+                    <a class="page-link" href="/?page=1">&laquo;</a>
                   </li>
                 {% elif item.type == "prev" %}
                   <li class="page-item {% if item.disabled %}disabled{% endif %}">
-                    <a class="page-link" href="/?page={{ item.page }}&tab=posts&frontend_auth={{ frontend_auth_token }}">&lsaquo;</a>
+                    <a class="page-link" href="/?page={{ item.page }}">&lsaquo;</a>
                   </li>
                 {% elif item.type == "next" %}
                   <li class="page-item {% if item.disabled %}disabled{% endif %}">
-                    <a class="page-link" href="/?page={{ item.page }}&tab=posts&frontend_auth={{ frontend_auth_token }}">&rsaquo;</a>
+                    <a class="page-link" href="/?page={{ item.page }}">&rsaquo;</a>
                   </li>
                 {% elif item.type == "last" %}
                   <li class="page-item {% if item.disabled %}disabled{% endif %}">
-                    <a class="page-link" href="/?page={{ item.page }}&tab=posts&frontend_auth={{ frontend_auth_token }}">&raquo;</a>
+                    <a class="page-link" href="/?page={{ item.page }}">&raquo;</a>
                   </li>
                 {% endif %}
               {% endfor %}
