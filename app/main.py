@@ -173,7 +173,7 @@ async def index(
 
     if active_tab == "posts":
         posts: List[dict] = load_posts()
-        posts_sorted = sorted(posts, key=lambda p: p.get("date", 0), reverse=True)
+        posts_sorted = sorted(posts, key=lambda p: p.get("date", 0))
 
         total_posts = len(posts_sorted)
         total_pages = max(1, ceil(total_posts / PAGE_SIZE)) if PAGE_SIZE > 0 else 1
