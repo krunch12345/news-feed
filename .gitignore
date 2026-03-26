@@ -25,5 +25,6 @@ node_modules/
 # App generated data
 data/posts.json
 data/groups.json
+data/schedule.json
 data/*.tmp
 postsImages/
