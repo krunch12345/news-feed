@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { appConfig } from "@/lib/config";
+import { appConfig } from "./config.js";
 
 const postsFile = path.join(appConfig.dataDir, "posts.json");
 const groupsFile = path.join(appConfig.dataDir, "groups.json");

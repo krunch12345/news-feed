@@ -23,6 +23,7 @@ node_modules/
 .yarn/install-state.gz
 
 # App generated data
+data/
 data/posts.json
 data/groups.json
 data/schedule.json

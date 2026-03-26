@@ -1,8 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { appConfig } from "@/lib/config";
-import { fetchPostsForGroups } from "@/lib/vk-client";
-import { loadGroups, loadPosts, savePosts, loadSchedule } from "@/lib/storage";
+import { appConfig } from "./config.js";
+import { fetchPostsForGroups } from "./vk-client.js";
+import { loadGroups, loadPosts, savePosts, loadSchedule } from "./storage.js";
 
 const maxImagesPerPost = 10;
 

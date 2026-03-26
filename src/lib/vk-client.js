@@ -1,4 +1,4 @@
-import { appConfig } from "@/lib/config";
+import { appConfig } from "./config.js";
 
 const vkLinkPattern = /\[(.+?)\|(.+?)\]/g;
 
