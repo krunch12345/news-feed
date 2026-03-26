@@ -1,4 +1,4 @@
-import DashboardClient from "@/components/dashboard-client";
+import { DashboardClient } from "@/components/dashboard-client";
 import { appConfig } from "@/lib/config";
 import { isFrontendAuthenticatedFromRequest } from "@/lib/auth";
 import { loadGroups, loadPosts, loadSchedule } from "@/lib/storage";

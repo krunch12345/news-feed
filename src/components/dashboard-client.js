@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import {
   Alert,
+  Box,
   Button,
   Card,
   CardContent,
@@ -12,6 +13,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  DialogContentText,
   IconButton,
   List,
   ListItem,
@@ -24,10 +26,12 @@ import {
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import RefreshIcon from "@mui/icons-material/Refresh";
-import LogoutIcon from "@mui/icons-material/Logout";
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
+import CloseIcon from "@mui/icons-material/Close";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import { AppHeader } from "@/components/app-header";
 
 const buildPostText = (post) => {
   const lines = [];
@@ -49,7 +53,7 @@ const buildPostText = (post) => {
   return lines.join("\n");
 };
 
-const DashboardClient = ({
+export const DashboardClient = ({
   activeTab,
   page,
   totalPages,
@@ -67,6 +71,8 @@ const DashboardClient = ({
   const [groupId, setGroupId] = useState("");
   const [groupName, setGroupName] = useState("");
   const [groupError, setGroupError] = useState("");
+  const [previewImages, setPreviewImages] = useState([]);
+  const [previewImageIndex, setPreviewImageIndex] = useState(0);
 
   const titleSummary = useMemo(() => {
     if (activeTab === "posts") {
@@ -129,11 +135,43 @@ const DashboardClient = ({
     window.location.href = "/?tab=groups";
   };
 
+  const closePreview = () => {
+    setPreviewImages([]);
+    setPreviewImageIndex(0);
+  };
+
+  const previewImageUrl = previewImages[previewImageIndex] || "";
+
+  const openPreview = (images, index) => {
+    setPreviewImages(images);
+    setPreviewImageIndex(index);
+  };
+
   const postCards = Children.toArray(
     posts.map((post) => {
       const postImages = Children.toArray(
-        (post.postImages || []).map((imageName) => (
-          <img key={imageName} src={`/api/images/${imageName}`} alt="Изображение поста" style={{ maxHeight: 300, borderRadius: 8, objectFit: "cover" }} />
+        (post.postImages || []).map((imageName, imageIndex) => (
+          <Box
+            key={imageName}
+            component="img"
+            src={`/api/images/${imageName}`}
+            alt="Изображение поста"
+            onClick={() => openPreview((post.postImages || []).map((item) => `/api/images/${item}`), imageIndex)}
+            sx={{
+              width: "auto",
+              maxWidth: "100%",
+              maxHeight: 320,
+              borderRadius: 1,
+              objectFit: "contain",
+              transform: "scale(1)",
+              transformOrigin: "center",
+              transition: "transform 0.2s ease-in-out",
+              cursor: "zoom-in",
+              "&:hover": {
+                transform: "scale(1.2)",
+              },
+            }}
+          />
         )),
       );
 
@@ -198,91 +236,82 @@ const DashboardClient = ({
   );
 
   return (
-    <Stack spacing={2} maxWidth={980} margin="0 auto" padding={2}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
-        <Typography variant="h4">МОЯ ЛЕНТА</Typography>
-        <Stack direction="row" spacing={1} alignItems="center">
-          <Typography variant="body2">{titleSummary}</Typography>
-          <Button component={Link} href={`/?tab=${activeTab}`} variant="contained" size="small" startIcon={<RefreshIcon />}>
-            Обновить
-          </Button>
-          <Button component={Link} href="/api/logout" variant="outlined" size="small" color="error" startIcon={<LogoutIcon />}>
-            Выйти
-          </Button>
-        </Stack>
+    <Stack spacing={2}>
+      <AppHeader activeTab={activeTab} titleSummary={titleSummary} />
+
+      <Stack spacing={2} maxWidth={1160} margin="0 auto" paddingX={2} paddingBottom={2} width="100%" alignSelf="center">
+        <Tabs value={activeTab} variant="fullWidth">
+          {Children.toArray([
+            <Tab key="posts-tab" value="posts" label="Посты" component={Link} href="/?tab=posts" />,
+            <Tab key="schedule-tab" value="schedule" label="Расписание" component={Link} href="/?tab=schedule" />,
+            <Tab key="groups-tab" value="groups" label="Сообщества" component={Link} href="/?tab=groups" />,
+          ])}
+        </Tabs>
+
+        {activeTab === "posts" && totalPages > 1 ? (
+          <Pagination
+            page={page}
+            count={totalPages}
+            onChange={(_event, value) => {
+              router.push(`/?tab=posts&page=${value}`);
+            }}
+          />
+        ) : null}
+
+        {activeTab === "posts" ? (
+          posts.length ? (
+            <Stack spacing={2}>{postCards}</Stack>
+          ) : (
+            <Typography color="text.secondary" textAlign="center">
+              Постов нет
+            </Typography>
+          )
+        ) : null}
+
+        {activeTab === "schedule" ? (
+          <Stack spacing={2} maxWidth={520} alignSelf="center" width="100%">
+            <form action="/api/schedule/add" method="post">
+              <Stack direction="row" spacing={1}>
+                <TextField type="time" name="time" required fullWidth size="small" />
+                <Button type="submit" variant="contained" startIcon={<AddIcon />}>
+                  Добавить
+                </Button>
+              </Stack>
+            </form>
+            {scheduleTimes.length ? (
+              <List>{scheduleListItems}</List>
+            ) : (
+              <Typography color="text.secondary" textAlign="center">
+                Таймингов нет
+              </Typography>
+            )}
+          </Stack>
+        ) : null}
+
+        {activeTab === "groups" ? (
+          <Stack spacing={2} maxWidth={720} alignSelf="center" width="100%">
+            <form action="/" method="get">
+              <input type="hidden" name="tab" value="groups" />
+              <Stack direction="row" spacing={1}>
+                <TextField name="group_query" defaultValue={groupQuery} placeholder="Поиск по названию или ID" size="small" fullWidth />
+                <Button type="submit" variant="contained" startIcon={<SearchIcon />}>
+                  Искать
+                </Button>
+                <Button type="button" variant="outlined" onClick={() => setIsGroupDialogOpen(true)} startIcon={<AddIcon />}>
+                  Добавить
+                </Button>
+              </Stack>
+            </form>
+            {groups.length ? (
+              <List>{groupListItems}</List>
+            ) : (
+              <Typography color="text.secondary" textAlign="center">
+                Сообществ нет
+              </Typography>
+            )}
+          </Stack>
+        ) : null}
       </Stack>
-
-      <Tabs value={activeTab} variant="fullWidth">
-        {Children.toArray([
-          <Tab key="posts-tab" value="posts" label="Посты" component={Link} href="/?tab=posts" />,
-          <Tab key="schedule-tab" value="schedule" label="Расписание" component={Link} href="/?tab=schedule" />,
-          <Tab key="groups-tab" value="groups" label="Сообщества" component={Link} href="/?tab=groups" />,
-        ])}
-      </Tabs>
-
-      {activeTab === "posts" && totalPages > 1 ? (
-        <Pagination
-          page={page}
-          count={totalPages}
-          onChange={(_event, value) => {
-            router.push(`/?tab=posts&page=${value}`);
-          }}
-        />
-      ) : null}
-
-      {activeTab === "posts" ? (
-        posts.length ? (
-          <Stack spacing={2}>{postCards}</Stack>
-        ) : (
-          <Typography color="text.secondary" textAlign="center">
-            Постов нет
-          </Typography>
-        )
-      ) : null}
-
-      {activeTab === "schedule" ? (
-        <Stack spacing={2} maxWidth={520} alignSelf="center" width="100%">
-          <form action="/api/schedule/add" method="post">
-            <Stack direction="row" spacing={1}>
-              <TextField type="time" name="time" required fullWidth size="small" />
-              <Button type="submit" variant="contained" startIcon={<AddIcon />}>
-                Добавить
-              </Button>
-            </Stack>
-          </form>
-          {scheduleTimes.length ? (
-            <List>{scheduleListItems}</List>
-          ) : (
-            <Typography color="text.secondary" textAlign="center">
-              Таймингов нет
-            </Typography>
-          )}
-        </Stack>
-      ) : null}
-
-      {activeTab === "groups" ? (
-        <Stack spacing={2} maxWidth={720} alignSelf="center" width="100%">
-          <form action="/" method="get">
-            <input type="hidden" name="tab" value="groups" />
-            <Stack direction="row" spacing={1}>
-              <TextField name="group_query" defaultValue={groupQuery} placeholder="Поиск по названию или ID" size="small" fullWidth />
-              <Button type="submit" variant="contained" startIcon={<SearchIcon />}>
-                Искать
-              </Button>
-              <Button type="button" variant="outlined" onClick={() => setIsGroupDialogOpen(true)} startIcon={<AddIcon />}>
-                Добавить
-              </Button>
-            </Stack>
-          </form>
-          {groups.length ? (
-            <List>{groupListItems}</List>
-          ) : (
-            <Typography color="text.secondary" textAlign="center">
-              Сообществ нет
-            </Typography>
-          )}
-        </Stack>
-      ) : null}
 
       <Dialog open={Boolean(confirmState.type)} onClose={() => setConfirmState({ type: "", value: "" })}>
         <DialogTitle>Подтверждение удаления</DialogTitle>
@@ -319,8 +348,59 @@ const DashboardClient = ({
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Dialog
+        open={Boolean(previewImageUrl)}
+        onClose={closePreview}
+        maxWidth="lg"
+        fullWidth
+        PaperProps={{
+          sx: {
+            overflow: "hidden",
+          },
+        }}
+      >
+        <DialogTitle>
+          <Stack direction="row" justifyContent="space-between" alignItems="center">
+            <Typography variant="h6">Изображения</Typography>
+            <IconButton color="error" onClick={closePreview}>
+              <CloseIcon />
+            </IconButton>
+          </Stack>
+        </DialogTitle>
+        <DialogContent sx={{ overflow: "hidden", pb: 2 }}>
+          <DialogContentText sx={{ mb: 1.5 }}>Нажми вне окна или Esc, чтобы закрыть просмотр.</DialogContentText>
+          {previewImageUrl ? (
+            <Stack direction="row" spacing={1} alignItems="center" justifyContent="center" sx={{ minHeight: "70vh", overflow: "hidden" }}>
+              <IconButton
+                color="primary"
+                disabled={previewImages.length <= 1}
+                onClick={() => setPreviewImageIndex((prev) => (prev - 1 + previewImages.length) % previewImages.length)}
+              >
+                <ChevronLeftIcon />
+              </IconButton>
+              <Box
+                component="img"
+                src={previewImageUrl}
+                alt="Полный размер изображения"
+                sx={{
+                  width: "100%",
+                  maxHeight: "70vh",
+                  objectFit: "contain",
+                  borderRadius: 1,
+                }}
+              />
+              <IconButton
+                color="primary"
+                disabled={previewImages.length <= 1}
+                onClick={() => setPreviewImageIndex((prev) => (prev + 1) % previewImages.length)}
+              >
+                <ChevronRightIcon />
+              </IconButton>
+            </Stack>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </Stack>
   );
 };
-
-export default DashboardClient;
