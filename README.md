@@ -64,12 +64,16 @@ Run development server:
 yarn dev
 ```
 
+Open in browser: `http://localhost:3111`
+
 Run production build:
 
 ```bash
 yarn build
 yarn start
 ```
+
+Production server also runs on port `3111`.
 
 Run scheduler once:
 
