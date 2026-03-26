@@ -15,6 +15,7 @@ import {
   DialogContent,
   DialogTitle,
   DialogContentText,
+  Fab,
   IconButton,
   List,
   ListItem,
@@ -25,13 +26,15 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import DeleteIcon from '@mui/icons-material/Delete'
-import ContentCopyIcon from '@mui/icons-material/ContentCopy'
-import AddIcon from '@mui/icons-material/Add'
-import SearchIcon from '@mui/icons-material/Search'
-import CloseIcon from '@mui/icons-material/Close'
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
-import ChevronRightIcon from '@mui/icons-material/ChevronRight'
+import {
+  Add,
+  ChevronLeft,
+  ChevronRight,
+  Close,
+  ContentCopy,
+  DeleteForever,
+  Search,
+} from '@mui/icons-material'
 import { AppHeader } from '@/components/app-header'
 
 /**
@@ -177,7 +180,7 @@ export const DashboardClient = ({
               width: 'auto',
               maxWidth: '100%',
               maxHeight: 320,
-              borderRadius: 1,
+              borderRadius: 2,
               objectFit: 'contain',
               transform: 'scale(1)',
               transformOrigin: 'center',
@@ -192,32 +195,159 @@ export const DashboardClient = ({
       )
 
       return (
-        <Card key={post.id}>
-          <CardContent>
+        <Card
+          key={post.id}
+          sx={{
+            position: 'relative',
+            borderRadius: '24px',
+            padding: '5px',
+            overflow: 'hidden',
+            backgroundColor: 'transparent',
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              inset: 0,
+              borderRadius: '24px',
+              padding: '4px',
+              background: 'linear-gradient(270deg, #6cff00, #00b894, #2dff7f, #1de9b6)',
+              backgroundSize: '320% 320%',
+              animation: 'postNeonGlow 8s ease-in-out infinite',
+              WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+              WebkitMaskComposite: 'xor',
+              maskComposite: 'exclude',
+              opacity: 0.66,
+              transition: 'opacity 0.3s ease',
+              pointerEvents: 'none',
+              filter: 'drop-shadow(0 0 9px rgba(77, 255, 121, 0.46))',
+            },
+            '&:hover::before': {
+              opacity: 1,
+              animation: 'postNeonGlow 10s ease-in-out infinite',
+            },
+            '@keyframes postNeonGlow': {
+              '0%': { backgroundPosition: '0% 50%' },
+              '50%': { backgroundPosition: '100% 50%' },
+              '100%': { backgroundPosition: '0% 50%' },
+            },
+          }}
+        >
+          <CardContent
+            sx={{
+              position: 'relative',
+              zIndex: 1,
+              borderRadius: '20px',
+              backgroundImage: 'linear-gradient(135deg, rgba(5, 14, 11, 0.94) 0%, rgba(8, 26, 19, 0.88) 50%, rgba(13, 34, 26, 0.8) 100%)',
+            }}
+          >
             <Stack spacing={1.5}>
               <Stack direction='row' justifyContent='space-between' alignItems='center'>
-                <Typography variant='h6'>{post.group}</Typography>
+                <Typography variant='h6' fontWeight={700}>{post.group}</Typography>
                 <Typography variant='body2'>{post.date_human}</Typography>
               </Stack>
               <Typography whiteSpace='pre-line'>{post.text || 'Без текста'}</Typography>
-              {postImages.length ? <Stack spacing={1}>{postImages}</Stack> : null}
-              {post.attachments_view ? <Typography variant='body2'>Вложения: {post.attachments_view}</Typography> : null}
+              {postImages.length ? <Stack spacing={1} alignItems='center'>{postImages}</Stack> : null}
+              {post.attachments_view ? <Typography variant='body2' color='text.secondary'>Вложения: {post.attachments_view}</Typography> : null}
               <Stack direction='row' justifyContent='space-between' alignItems='center'>
-                <Button href={post.url} target='_blank' variant='text'>
-                  Открыть
+                <Button href={post.url} target='_blank' variant='text' color='success'>
+                  Открыть вк
                 </Button>
                 <Stack direction='row' spacing={1}>
-                  <Button onClick={() => onCopyClick(post)} variant='contained' color='success' startIcon={<ContentCopyIcon />}>
-                    Копировать
-                  </Button>
-                  <Button
-                    onClick={() => setConfirmState({ type: 'post', value: post.id })}
-                    variant='contained'
-                    color='error'
-                    startIcon={<DeleteIcon />}
+                  <Fab
+                    variant='extended'
+                    size='small'
+                    onClick={() => onCopyClick(post)}
+                    sx={{
+                      minWidth: 'auto',
+                      width: 34,
+                      height: 34,
+                      borderRadius: '50%',
+                      justifyContent: 'center',
+                      overflow: 'hidden',
+                      pl: 0.8,
+                      pr: 0.8,
+                      transition: 'all 0.25s ease',
+                      backgroundColor: 'transparent',
+                      color: 'success.main',
+                      boxShadow: 'none',
+                      '&:hover': {
+                        width: 'auto',
+                        borderRadius: 5,
+                        pl: 1.25,
+                        pr: 1.5,
+                        backgroundColor: 'success.dark',
+                        color: '#ffffff',
+                        boxShadow: 'none',
+                      },
+                      '&:hover .action-label-copy': {
+                        maxWidth: 120,
+                        opacity: 1,
+                        ml: 0.5,
+                      },
+                    }}
                   >
-                    Удалить
-                  </Button>
+                    <ContentCopy />
+                    <Typography
+                      className='action-label-copy'
+                      sx={{
+                        maxWidth: 0,
+                        opacity: 0,
+                        overflow: 'hidden',
+                        whiteSpace: 'nowrap',
+                        ml: 0,
+                        transition: 'max-width 0.25s ease, opacity 0.25s ease, margin-left 0.25s ease',
+                      }}
+                    >
+                      Копировать
+                    </Typography>
+                  </Fab>
+                  <Fab
+                    variant='extended'
+                    size='small'
+                    onClick={() => setConfirmState({ type: 'post', value: post.id })}
+                    sx={{
+                      minWidth: 'auto',
+                      width: 34,
+                      height: 34,
+                      borderRadius: '50%',
+                      justifyContent: 'center',
+                      overflow: 'hidden',
+                      pl: 0.8,
+                      pr: 0.8,
+                      transition: 'all 0.25s ease',
+                      backgroundColor: 'transparent',
+                      color: 'error.main',
+                      boxShadow: 'none',
+                      '&:hover': {
+                        width: 'auto',
+                        borderRadius: 5,
+                        pl: 1.25,
+                        pr: 1.5,
+                        backgroundColor: 'error.dark',
+                        color: '#ffffff',
+                        boxShadow: 'none',
+                      },
+                      '&:hover .action-label-delete': {
+                        maxWidth: 100,
+                        opacity: 1,
+                        ml: 0.5,
+                      },
+                    }}
+                  >
+                    <DeleteForever />
+                    <Typography
+                      className='action-label-delete'
+                      sx={{
+                        maxWidth: 0,
+                        opacity: 0,
+                        overflow: 'hidden',
+                        whiteSpace: 'nowrap',
+                        ml: 0,
+                        transition: 'max-width 0.25s ease, opacity 0.25s ease, margin-left 0.25s ease',
+                      }}
+                    >
+                      Удалить
+                    </Typography>
+                  </Fab>
                 </Stack>
               </Stack>
             </Stack>
@@ -233,7 +363,7 @@ export const DashboardClient = ({
         <Stack direction='row' justifyContent='space-between' alignItems='center' width='100%'>
           <Typography>{timeValue}</Typography>
           <IconButton edge='end' color='error' onClick={() => setConfirmState({ type: 'schedule', value: timeValue })}>
-            <DeleteIcon />
+            <DeleteForever />
           </IconButton>
         </Stack>
       </ListItem>
@@ -249,7 +379,7 @@ export const DashboardClient = ({
             <Typography color='text.secondary'>ID: {group.id}</Typography>
           </Stack>
           <IconButton edge='end' color='error' onClick={() => setConfirmState({ type: 'group', value: group.id })}>
-            <DeleteIcon />
+            <DeleteForever />
           </IconButton>
         </Stack>
       </ListItem>
@@ -257,10 +387,10 @@ export const DashboardClient = ({
   )
 
   return (
-    <Stack spacing={2}>
+    <Stack spacing={0}>
       <AppHeader activeTab={activeTab} titleSummary={titleSummary} />
 
-      <Stack spacing={2} maxWidth={1160} margin='0 auto' paddingX={2} paddingBottom={2} width='100%' alignSelf='center'>
+      <Stack spacing={2} maxWidth={1080} margin='0 auto' paddingX={2} paddingTop={2} paddingBottom={2} width='100%' alignSelf='center'>
         <Tabs value={activeTab} variant='fullWidth'>
           {Children.toArray([
             <Tab key='posts-tab' value='posts' label='Посты' component={Link} href='/?tab=posts' />,
@@ -294,7 +424,7 @@ export const DashboardClient = ({
             <form action='/api/schedule/add' method='post'>
               <Stack direction='row' spacing={1}>
                 <TextField type='time' name='time' required fullWidth size='small' />
-                <Button type='submit' variant='contained' startIcon={<AddIcon />}>
+                <Button type='submit' variant='contained' startIcon={<Add />}>
                   Добавить
                 </Button>
               </Stack>
@@ -315,10 +445,10 @@ export const DashboardClient = ({
               <input type='hidden' name='tab' value='groups' />
               <Stack direction='row' spacing={1}>
                 <TextField name='group_query' defaultValue={groupQuery} placeholder='Поиск по названию или ID' size='small' fullWidth />
-                <Button type='submit' variant='contained' startIcon={<SearchIcon />}>
+                <Button type='submit' variant='contained' startIcon={<Search />}>
                   Искать
                 </Button>
-                <Button type='button' variant='outlined' onClick={() => setIsGroupDialogOpen(true)} startIcon={<AddIcon />}>
+                <Button type='button' variant='outlined' onClick={() => setIsGroupDialogOpen(true)} startIcon={<Add />}>
                   Добавить
                 </Button>
               </Stack>
@@ -385,7 +515,7 @@ export const DashboardClient = ({
           <Stack direction='row' justifyContent='space-between' alignItems='center'>
             <Typography variant='h6'>Изображения</Typography>
             <IconButton color='error' onClick={closePreview}>
-              <CloseIcon />
+              <Close />
             </IconButton>
           </Stack>
         </DialogTitle>
@@ -398,7 +528,7 @@ export const DashboardClient = ({
                 disabled={previewImages.length <= 1}
                 onClick={() => setPreviewImageIndex((prev) => (prev - 1 + previewImages.length) % previewImages.length)}
               >
-                <ChevronLeftIcon />
+                <ChevronLeft />
               </IconButton>
               <Box
                 component='img'
@@ -416,7 +546,7 @@ export const DashboardClient = ({
                 disabled={previewImages.length <= 1}
                 onClick={() => setPreviewImageIndex((prev) => (prev + 1) % previewImages.length)}
               >
-                <ChevronRightIcon />
+                <ChevronRight />
               </IconButton>
             </Stack>
           ) : null}
