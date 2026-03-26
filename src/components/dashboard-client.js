@@ -129,6 +129,74 @@ const DashboardClient = ({
     window.location.href = "/?tab=groups";
   };
 
+  const postCards = Children.toArray(
+    posts.map((post) => {
+      const postImages = Children.toArray(
+        (post.postImages || []).map((imageName) => (
+          <img key={imageName} src={`/api/images/${imageName}`} alt="Изображение поста" style={{ maxHeight: 300, borderRadius: 8, objectFit: "cover" }} />
+        )),
+      );
+
+      return (
+        <Card key={post.id}>
+          <CardContent>
+            <Stack spacing={1.5}>
+              <Stack direction="row" justifyContent="space-between" alignItems="center">
+                <Typography variant="h6">{post.group}</Typography>
+                <Typography variant="body2">{post.date_human}</Typography>
+              </Stack>
+              <Typography whiteSpace="pre-line">{post.text || "Без текста"}</Typography>
+              {postImages.length ? <Stack spacing={1}>{postImages}</Stack> : null}
+              {post.attachments_view ? <Typography variant="body2">Вложения: {post.attachments_view}</Typography> : null}
+              <Stack direction="row" justifyContent="space-between" alignItems="center">
+                <Button href={post.url} target="_blank" variant="text">
+                  Открыть
+                </Button>
+                <Stack direction="row" spacing={1}>
+                  <Button onClick={() => onCopyClick(post)} variant="contained" color="success" startIcon={<ContentCopyIcon />}>
+                    Копировать
+                  </Button>
+                  <Button onClick={() => setConfirmState({ type: "post", value: post.id })} variant="contained" color="error" startIcon={<DeleteIcon />}>
+                    Удалить
+                  </Button>
+                </Stack>
+              </Stack>
+            </Stack>
+          </CardContent>
+        </Card>
+      );
+    }),
+  );
+
+  const scheduleListItems = Children.toArray(
+    scheduleTimes.map((timeValue) => (
+      <ListItem key={timeValue}>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" width="100%">
+          <Typography>{timeValue}</Typography>
+          <IconButton edge="end" color="error" onClick={() => setConfirmState({ type: "schedule", value: timeValue })}>
+            <DeleteIcon />
+          </IconButton>
+        </Stack>
+      </ListItem>
+    )),
+  );
+
+  const groupListItems = Children.toArray(
+    groups.map((group) => (
+      <ListItem key={group.id}>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" width="100%">
+          <Stack direction="row" spacing={1}>
+            <Typography>{group.name}</Typography>
+            <Typography color="text.secondary">ID: {group.id}</Typography>
+          </Stack>
+          <IconButton edge="end" color="error" onClick={() => setConfirmState({ type: "group", value: group.id })}>
+            <DeleteIcon />
+          </IconButton>
+        </Stack>
+      </ListItem>
+    )),
+  );
+
   return (
     <Stack spacing={2} maxWidth={980} margin="0 auto" padding={2}>
       <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
@@ -146,9 +214,9 @@ const DashboardClient = ({
 
       <Tabs value={activeTab} variant="fullWidth">
         {Children.toArray([
-          <Tab value="posts" label="Посты" component={Link} href="/?tab=posts" />,
-          <Tab value="schedule" label="Расписание" component={Link} href="/?tab=schedule" />,
-          <Tab value="groups" label="Сообщества" component={Link} href="/?tab=groups" />,
+          <Tab key="posts-tab" value="posts" label="Посты" component={Link} href="/?tab=posts" />,
+          <Tab key="schedule-tab" value="schedule" label="Расписание" component={Link} href="/?tab=schedule" />,
+          <Tab key="groups-tab" value="groups" label="Сообщества" component={Link} href="/?tab=groups" />,
         ])}
       </Tabs>
 
@@ -164,46 +232,7 @@ const DashboardClient = ({
 
       {activeTab === "posts" ? (
         posts.length ? (
-          <Stack spacing={2}>
-            {Children.toArray(
-              posts.map((post) => (
-                <Card>
-                  <CardContent>
-                    <Stack spacing={1.5}>
-                      <Stack direction="row" justifyContent="space-between" alignItems="center">
-                        <Typography variant="h6">{post.group}</Typography>
-                        <Typography variant="body2">{post.date_human}</Typography>
-                      </Stack>
-                      <Typography whiteSpace="pre-line">{post.text || "Без текста"}</Typography>
-                      {post.postImages?.length ? (
-                        <Stack spacing={1}>
-                          {Children.toArray(
-                            post.postImages.map((imageName) => (
-                              <img src={`/api/images/${imageName}`} alt="Изображение поста" style={{ maxHeight: 300, borderRadius: 8, objectFit: "cover" }} />
-                            )),
-                          )}
-                        </Stack>
-                      ) : null}
-                      {post.attachments_view ? <Typography variant="body2">Вложения: {post.attachments_view}</Typography> : null}
-                      <Stack direction="row" justifyContent="space-between" alignItems="center">
-                        <Button href={post.url} target="_blank" variant="text">
-                          Открыть
-                        </Button>
-                        <Stack direction="row" spacing={1}>
-                          <Button onClick={() => onCopyClick(post)} variant="contained" color="success" startIcon={<ContentCopyIcon />}>
-                            Копировать
-                          </Button>
-                          <Button onClick={() => setConfirmState({ type: "post", value: post.id })} variant="contained" color="error" startIcon={<DeleteIcon />}>
-                            Удалить
-                          </Button>
-                        </Stack>
-                      </Stack>
-                    </Stack>
-                  </CardContent>
-                </Card>
-              )),
-            )}
-          </Stack>
+          <Stack spacing={2}>{postCards}</Stack>
         ) : (
           <Typography color="text.secondary" textAlign="center">
             Постов нет
@@ -222,21 +251,7 @@ const DashboardClient = ({
             </Stack>
           </form>
           {scheduleTimes.length ? (
-            <List>
-              {Children.toArray(
-                scheduleTimes.map((timeValue) => (
-                  <ListItem
-                    secondaryAction={
-                      <IconButton edge="end" color="error" onClick={() => setConfirmState({ type: "schedule", value: timeValue })}>
-                        <DeleteIcon />
-                      </IconButton>
-                    }
-                  >
-                    <Typography>{timeValue}</Typography>
-                  </ListItem>
-                )),
-              )}
-            </List>
+            <List>{scheduleListItems}</List>
           ) : (
             <Typography color="text.secondary" textAlign="center">
               Таймингов нет
@@ -260,24 +275,7 @@ const DashboardClient = ({
             </Stack>
           </form>
           {groups.length ? (
-            <List>
-              {Children.toArray(
-                groups.map((group) => (
-                  <ListItem
-                    secondaryAction={
-                      <IconButton edge="end" color="error" onClick={() => setConfirmState({ type: "group", value: group.id })}>
-                        <DeleteIcon />
-                      </IconButton>
-                    }
-                  >
-                    <Stack direction="row" spacing={1}>
-                      <Typography>{group.name}</Typography>
-                      <Typography color="text.secondary">ID: {group.id}</Typography>
-                    </Stack>
-                  </ListItem>
-                )),
-              )}
-            </List>
+            <List>{groupListItems}</List>
           ) : (
             <Typography color="text.secondary" textAlign="center">
               Сообществ нет
