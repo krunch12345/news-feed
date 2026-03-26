@@ -1,15 +1,16 @@
-import { CssBaseline, ThemeProvider, createTheme } from "@mui/material";
-import "../styles/globals.css";
+import { CssBaseline, ThemeProvider, createTheme } from '@mui/material'
+import PropTypes from 'prop-types'
+import '../styles/globals.css'
 
 const theme = createTheme({
   palette: {
-    mode: "dark",
+    mode: 'dark',
     background: {
-      default: "#181a1f",
-      paper: "#2e3338",
+      default: '#181a1f',
+      paper: '#2e3338',
     },
   },
-});
+})
 
 const App = ({ Component, pageProps }) => {
   return (
@@ -17,7 +18,12 @@ const App = ({ Component, pageProps }) => {
       <CssBaseline />
       <Component {...pageProps} />
     </ThemeProvider>
-  );
-};
+  )
+}
 
-export default App;
+App.propTypes = {
+  Component: PropTypes.elementType.isRequired,
+  pageProps: PropTypes.object.isRequired,
+}
+
+export default App

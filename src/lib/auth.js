@@ -1,78 +1,78 @@
-import { appConfig } from "@/lib/config";
+import { appConfig } from '@/lib/config'
 
-const parseBasicAuth = (authorization = "") => {
-  if (!authorization.startsWith("Basic ")) {
-    return null;
+const parseBasicAuth = (authorization = '') => {
+  if (!authorization.startsWith('Basic ')) {
+    return null
   }
 
-  const encoded = authorization.slice(6).trim();
+  const encoded = authorization.slice(6).trim()
   try {
-    const decoded = Buffer.from(encoded, "base64").toString("utf8");
-    const splitIndex = decoded.indexOf(":");
+    const decoded = Buffer.from(encoded, 'base64').toString('utf8')
+    const splitIndex = decoded.indexOf(':')
     if (splitIndex === -1) {
-      return null;
+      return null
     }
     return {
       username: decoded.slice(0, splitIndex),
       password: decoded.slice(splitIndex + 1),
-    };
+    }
   } catch {
-    return null;
+    return null
   }
-};
+}
 
-export const isFrontendAuthEnabled = () => Boolean(appConfig.authUser || appConfig.authPass);
+export const isFrontendAuthEnabled = () => Boolean(appConfig.authUser || appConfig.authPass)
 
 export const checkLoginCredentials = ({ username, password }) => {
-  return Boolean(appConfig.authUser && appConfig.authPass && username === appConfig.authUser && password === appConfig.authPass);
-};
+  return Boolean(appConfig.authUser && appConfig.authPass && username === appConfig.authUser && password === appConfig.authPass)
+}
 
-export const isFrontendAuthenticated = () => !isFrontendAuthEnabled();
+export const isFrontendAuthenticated = () => !isFrontendAuthEnabled()
 
 export const isBasicAuthValid = (request) => {
   if (!appConfig.basicUser && !appConfig.basicPass) {
-    return true;
+    return true
   }
-  const parsed = parseBasicAuth(request.headers.get("authorization") || "");
-  return Boolean(parsed && parsed.username === appConfig.basicUser && parsed.password === appConfig.basicPass);
-};
+  const parsed = parseBasicAuth(request.headers.get('authorization') || '')
+  return Boolean(parsed && parsed.username === appConfig.basicUser && parsed.password === appConfig.basicPass)
+}
 
-const parseCookieHeader = (cookieHeader = "") => {
-  return cookieHeader.split(";").reduce((acc, part) => {
-    const [key, ...rest] = part.split("=");
+const parseCookieHeader = (cookieHeader = '') => {
+  return cookieHeader.split(';').reduce((acc, part) => {
+    const [key, ...rest] = part.split('=')
     if (!key) {
-      return acc;
+      return acc
     }
-    acc[key.trim()] = decodeURIComponent(rest.join("=").trim());
-    return acc;
-  }, {});
-};
+    acc[key.trim()] = decodeURIComponent(rest.join('=').trim())
+    return acc
+  }, {})
+}
 
 export const isRequestAuthorized = (request) => {
   if (isBasicAuthValid(request)) {
-    return true;
+    return true
   }
   if (!isFrontendAuthEnabled()) {
-    return false;
+    return false
   }
-  const cookies = parseCookieHeader(request.headers.get("cookie") || "");
-  return cookies.session_user === appConfig.authUser;
-};
+  const cookies = parseCookieHeader(request.headers.get('cookie') || '')
+  return cookies.session_user === appConfig.authUser
+}
 
 export const isFrontendAuthenticatedFromRequest = (request) => {
   if (!isFrontendAuthEnabled()) {
-    return true;
+    return true
   }
-  return request?.cookies?.session_user === appConfig.authUser;
-};
+  return request?.cookies?.session_user === appConfig.authUser
+}
 
 export const isRequestAuthorizedFromNodeRequest = (request) => {
   if (!appConfig.basicUser && !appConfig.basicPass) {
-    return true;
+    return true
   }
-  const parsed = parseBasicAuth(request.headers.authorization || "");
+  const parsed = parseBasicAuth(request.headers.authorization || '')
   if (parsed && parsed.username === appConfig.basicUser && parsed.password === appConfig.basicPass) {
-    return true;
+    return true
   }
-  return isFrontendAuthenticatedFromRequest(request);
-};
+  return isFrontendAuthenticatedFromRequest(request)
+}

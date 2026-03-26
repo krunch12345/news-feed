@@ -7,6 +7,7 @@
     "dev": "next dev -p 3111",
     "build": "next build",
     "start": "next start -p 3111",
+    "lint": "eslint . --ext .js,.jsx",
     "scheduler": "node scripts/scheduler.js",
     "test": "echo \"No tests configured\""
   },
@@ -27,7 +28,14 @@
     "@mui/icons-material": "^7.3.9",
     "@mui/material": "^7.3.9",
     "next": "^16.2.1",
+    "prop-types": "^15.8.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "eslint": "8.57.1",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.5.2"
   }
 }
