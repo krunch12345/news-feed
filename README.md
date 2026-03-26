@@ -49,7 +49,6 @@ Main environment variables:
 - `POSTS_IMAGES_DIR` — images directory path (default `./postsImages`).
 - `PAGE_SIZE` — posts per page (default `20`).
 - `AUTH_USER`, `AUTH_PASS` — UI login credentials.
-- `BASIC_AUTH_USER`, `BASIC_AUTH_PASS` — optional basic auth for API access.
 
 ### Local setup
 

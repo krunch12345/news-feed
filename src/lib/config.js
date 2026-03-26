@@ -11,8 +11,6 @@ export const appConfig = {
   pageSize: Number.parseInt(getEnv('PAGE_SIZE', '20'), 10) || 20,
   authUser: getEnv('AUTH_USER'),
   authPass: getEnv('AUTH_PASS'),
-  basicUser: getEnv('BASIC_AUTH_USER'),
-  basicPass: getEnv('BASIC_AUTH_PASS'),
   vkToken: getEnv('VK_TOKEN'),
   vkApiVersion: getEnv('VK_API_VERSION', '5.131'),
   vkRequestDelayMs: Math.floor((Number.parseFloat(getEnv('VK_REQUEST_DELAY', '0.5')) || 0.5) * 1000),
