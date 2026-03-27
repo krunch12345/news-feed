@@ -1,11 +1,21 @@
-import { DashboardClient } from '@/components/dashboard-client'
+import { DashboardClient } from '@/components/DashboardClient/components/DashboardClient'
 import { appConfig } from '@/lib/config'
 import { isFrontendAuthenticatedFromRequest } from '@/lib/auth'
 import { loadGroups, loadPosts, loadSchedule } from '@/lib/storage'
 import { preparePostView } from '@/lib/view'
 
+/**
+ * Renders the main dashboard page.
+ * @param {object} props Dashboard client props.
+ * @returns {JSX.Element}
+ */
 const HomePage = (props) => <DashboardClient {...props} />
 
+/**
+ * Loads dashboard data for active tab and enforces auth redirect.
+ * @param {object} context Next.js server-side context.
+ * @returns {Promise<{redirect: {destination: string, permanent: boolean}} | {props: object}>}
+ */
 export const getServerSideProps = async ({ req, query }) => {
   if (!isFrontendAuthenticatedFromRequest(req)) {
     return {
@@ -30,10 +40,14 @@ export const getServerSideProps = async ({ req, query }) => {
   if (activeTab === 'posts') {
     const allPosts = await loadPosts()
     const sorted = [...allPosts].sort((a, b) => Number(a?.date || 0) - Number(b?.date || 0))
+
     totalPosts = sorted.length
     totalPages = Math.max(1, Math.ceil(totalPosts / appConfig.pageSize))
+
     page = Math.min(page, totalPages)
+
     const start = (page - 1) * appConfig.pageSize
+
     posts = sorted.slice(start, start + appConfig.pageSize).map(preparePostView)
   } else if (activeTab === 'schedule') {
     scheduleTimes = (await loadSchedule()).sort()
@@ -41,6 +55,7 @@ export const getServerSideProps = async ({ req, query }) => {
   } else {
     const allGroups = await loadGroups()
     const q = String(query?.group_query || '').trim().toLowerCase()
+
     groups = q ? allGroups.filter((group) => group.name.toLowerCase().includes(q) || group.id.toLowerCase().includes(q)) : allGroups
     totalGroups = groups.length
   }

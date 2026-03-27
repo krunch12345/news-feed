@@ -1,6 +1,6 @@
 'use client'
 
-import { Children, useMemo, useState } from 'react'
+import { Children, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import PropTypes from 'prop-types'
 import { useRouter } from 'next/router'
@@ -14,15 +14,12 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  DialogContentText,
   Fab,
   IconButton,
   List,
   ListItem,
   Pagination,
   Stack,
-  Tab,
-  Tabs,
   TextField,
   Typography,
 } from '@mui/material'
@@ -33,9 +30,10 @@ import {
   Close,
   ContentCopy,
   DeleteForever,
+  KeyboardArrowUp,
   Search,
 } from '@mui/icons-material'
-import { AppHeader } from '@/components/app-header'
+import { AppHeader } from '@/components/AppHeader/components/AppHeader'
 
 /**
  * Builds a copy-ready multiline post text.
@@ -87,16 +85,17 @@ export const DashboardClient = ({
   const [groupError, setGroupError] = useState('')
   const [previewImages, setPreviewImages] = useState([])
   const [previewImageIndex, setPreviewImageIndex] = useState(0)
+  const [isScrollTopVisible, setIsScrollTopVisible] = useState(false)
 
   const titleSummary = useMemo(() => {
     if (activeTab === 'posts') {
-      return `Всего постов: ${totalPosts}${totalPosts > 0 ? ` | Страница ${page} из ${totalPages}` : ''}`
+      return `всего постов: ${totalPosts}`
     }
     if (activeTab === 'schedule') {
-      return `Всего таймингов: ${totalSchedule}`
+      return `всего таймингов: ${totalSchedule}`
     }
-    return `Всего сообществ: ${totalGroups}`
-  }, [activeTab, page, totalGroups, totalPages, totalPosts, totalSchedule])
+    return `всего сообществ: ${totalGroups}`
+  }, [activeTab, totalGroups, totalPosts, totalSchedule])
 
   const onCopyClick = async (post) => {
     try {
@@ -161,6 +160,67 @@ export const DashboardClient = ({
     setPreviewImageIndex(index)
   }
 
+  useEffect(() => {
+    const updateScrollTopVisibility = () => {
+      const scrollTop = window.scrollY
+      const threshold = window.innerHeight
+      setIsScrollTopVisible(scrollTop > threshold)
+    }
+
+    updateScrollTopVisibility()
+    window.addEventListener('resize', updateScrollTopVisibility, { passive: true })
+    window.addEventListener('scroll', updateScrollTopVisibility, { passive: true })
+
+    return () => {
+      window.removeEventListener('resize', updateScrollTopVisibility)
+      window.removeEventListener('scroll', updateScrollTopVisibility)
+    }
+  }, [activeTab, posts.length, scheduleTimes.length, groups.length])
+
+  const deleteDialogText = useMemo(() => {
+    if (!confirmState.type || !confirmState.value) {
+      return ''
+    }
+
+    if (confirmState.type === 'post') {
+      const post = posts.find((item) => item.id === confirmState.value)
+      const groupName = post?.group || 'сообщество'
+      const timing = post?.date_human
+      return timing ? `${groupName} (${timing})` : groupName
+    }
+
+    if (confirmState.type === 'schedule') {
+      return String(confirmState.value)
+    }
+
+    if (confirmState.type === 'group') {
+      const group = groups.find((item) => item.id === confirmState.value)
+      const groupName = group?.name || confirmState.value
+      return groupName
+    }
+
+    return ''
+  }, [confirmState.type, confirmState.value, posts, scheduleTimes, groups])
+
+  useEffect(() => {
+    if (!previewImageUrl) {
+      return undefined
+    }
+
+    const onPreviewKeyDown = (event) => {
+      if (previewImages.length > 1 && event.key === 'ArrowLeft') {
+        setPreviewImageIndex((prev) => (prev - 1 + previewImages.length) % previewImages.length)
+      } else if (previewImages.length > 1 && event.key === 'ArrowRight') {
+        setPreviewImageIndex((prev) => (prev + 1) % previewImages.length)
+      }
+    }
+
+    window.addEventListener('keydown', onPreviewKeyDown)
+    return () => {
+      window.removeEventListener('keydown', onPreviewKeyDown)
+    }
+  }, [previewImageUrl, previewImages])
+
   const postCards = Children.toArray(
     posts.map((post) => {
       const postImages = Children.toArray(
@@ -179,15 +239,18 @@ export const DashboardClient = ({
             sx={{
               width: 'auto',
               maxWidth: '100%',
-              maxHeight: 320,
+              maxHeight: 160,
               borderRadius: 2,
               objectFit: 'contain',
+              position: 'relative',
+              zIndex: 1,
               transform: 'scale(1)',
               transformOrigin: 'center',
               transition: 'transform 0.2s ease-in-out',
               cursor: 'zoom-in',
               '&:hover': {
-                transform: 'scale(1.2)',
+                transform: 'scale(1.55)',
+                zIndex: 20,
               },
             }}
           />
@@ -201,7 +264,7 @@ export const DashboardClient = ({
             position: 'relative',
             borderRadius: '24px',
             padding: '5px',
-            overflow: 'hidden',
+            overflow: 'visible',
             backgroundColor: 'transparent',
             '&::before': {
               content: '""',
@@ -236,6 +299,7 @@ export const DashboardClient = ({
               position: 'relative',
               zIndex: 1,
               borderRadius: '20px',
+              overflow: 'visible',
               backgroundImage: 'linear-gradient(135deg, rgba(5, 14, 11, 0.94) 0%, rgba(8, 26, 19, 0.88) 50%, rgba(13, 34, 26, 0.8) 100%)',
             }}
           >
@@ -245,7 +309,7 @@ export const DashboardClient = ({
                 <Typography variant='body2'>{post.date_human}</Typography>
               </Stack>
               <Typography whiteSpace='pre-line'>{post.text || 'Без текста'}</Typography>
-              {postImages.length ? <Stack spacing={1} alignItems='center'>{postImages}</Stack> : null}
+              {postImages.length ? <Stack direction='row' spacing={1} useFlexGap flexWrap='wrap' justifyContent='center'>{postImages}</Stack> : null}
               {post.attachments_view ? <Typography variant='body2' color='text.secondary'>Вложения: {post.attachments_view}</Typography> : null}
               <Stack direction='row' justifyContent='space-between' alignItems='center'>
                 <Button href={post.url} target='_blank' variant='text' color='success'>
@@ -376,7 +440,7 @@ export const DashboardClient = ({
         <Stack direction='row' justifyContent='space-between' alignItems='center' width='100%'>
           <Stack direction='row' spacing={1}>
             <Typography>{group.name}</Typography>
-            <Typography color='text.secondary'>ID: {group.id}</Typography>
+            <Typography color='text.secondary'>ID: {String(group.id).replace(/-/g, '')}</Typography>
           </Stack>
           <IconButton edge='end' color='error' onClick={() => setConfirmState({ type: 'group', value: group.id })}>
             <DeleteForever />
@@ -388,30 +452,61 @@ export const DashboardClient = ({
 
   return (
     <Stack spacing={0}>
-      <AppHeader activeTab={activeTab} titleSummary={titleSummary} />
+      <AppHeader activeTab={activeTab} />
 
       <Stack spacing={2} maxWidth={1080} margin='0 auto' paddingX={2} paddingTop={2} paddingBottom={2} width='100%' alignSelf='center'>
-        <Tabs value={activeTab} variant='fullWidth'>
-          {Children.toArray([
-            <Tab key='posts-tab' value='posts' label='Посты' component={Link} href='/?tab=posts' />,
-            <Tab key='schedule-tab' value='schedule' label='Расписание' component={Link} href='/?tab=schedule' />,
-            <Tab key='groups-tab' value='groups' label='Сообщества' component={Link} href='/?tab=groups' />,
-          ])}
-        </Tabs>
+        <Typography variant='body2' textAlign='center' color='text.secondary'>
+          {titleSummary}
+        </Typography>
 
         {activeTab === 'posts' && totalPages > 1 ? (
-          <Pagination
-            page={page}
-            count={totalPages}
-            onChange={(_event, value) => {
-              router.push(`/?tab=posts&page=${value}`)
-            }}
-          />
+          <Stack direction='row' justifyContent='center'>
+            <Pagination
+              page={page}
+              count={totalPages}
+              sx={{
+                '& .MuiPaginationItem-root.Mui-selected': {
+                  backgroundColor: 'success.dark',
+                  color: '#ffffff',
+                },
+                '& .MuiPaginationItem-root.Mui-selected:hover': {
+                  backgroundColor: 'success.dark',
+                  filter: 'brightness(0.92)',
+                },
+              }}
+              onChange={(_event, value) => {
+                router.push(`/?tab=posts&page=${value}`)
+              }}
+            />
+          </Stack>
         ) : null}
 
         {activeTab === 'posts' ? (
           posts.length ? (
-            <Stack spacing={2}>{postCards}</Stack>
+            <Stack spacing={2}>
+              {postCards}
+              {totalPages > 1 ? (
+                <Stack direction='row' justifyContent='center'>
+                  <Pagination
+                    page={page}
+                    count={totalPages}
+                    sx={{
+                      '& .MuiPaginationItem-root.Mui-selected': {
+                        backgroundColor: 'success.dark',
+                        color: '#ffffff',
+                      },
+                      '& .MuiPaginationItem-root.Mui-selected:hover': {
+                        backgroundColor: 'success.dark',
+                        filter: 'brightness(0.92)',
+                      },
+                    }}
+                    onChange={(_event, value) => {
+                      router.push(`/?tab=posts&page=${value}`)
+                    }}
+                  />
+                </Stack>
+              ) : null}
+            </Stack>
           ) : (
             <Typography color='text.secondary' textAlign='center'>
               Постов нет
@@ -424,7 +519,18 @@ export const DashboardClient = ({
             <form action='/api/schedule/add' method='post'>
               <Stack direction='row' spacing={1}>
                 <TextField type='time' name='time' required fullWidth size='small' />
-                <Button type='submit' variant='contained' startIcon={<Add />}>
+                <Button
+                  type='submit'
+                  variant='contained'
+                  color='success'
+                  startIcon={<Add />}
+                  sx={{
+                    px: 3.25,
+                    '& .MuiButton-startIcon': {
+                      marginRight: 1,
+                    },
+                  }}
+                >
                   Добавить
                 </Button>
               </Stack>
@@ -445,10 +551,22 @@ export const DashboardClient = ({
               <input type='hidden' name='tab' value='groups' />
               <Stack direction='row' spacing={1}>
                 <TextField name='group_query' defaultValue={groupQuery} placeholder='Поиск по названию или ID' size='small' fullWidth />
-                <Button type='submit' variant='contained' startIcon={<Search />}>
-                  Искать
-                </Button>
-                <Button type='button' variant='outlined' onClick={() => setIsGroupDialogOpen(true)} startIcon={<Add />}>
+                <IconButton type='submit' color='success' aria-label='Искать' sx={{ backgroundColor: 'transparent' }}>
+                  <Search />
+                </IconButton>
+                <Button
+                  type='button'
+                  variant='contained'
+                  color='success'
+                  onClick={() => setIsGroupDialogOpen(true)}
+                  startIcon={<Add />}
+                  sx={{
+                    px: 3.25,
+                    '& .MuiButton-startIcon': {
+                      marginRight: 1,
+                    },
+                  }}
+                >
                   Добавить
                 </Button>
               </Stack>
@@ -464,10 +582,42 @@ export const DashboardClient = ({
         ) : null}
       </Stack>
 
-      <Dialog open={Boolean(confirmState.type)} onClose={() => setConfirmState({ type: '', value: '' })}>
-        <DialogTitle>Подтверждение удаления</DialogTitle>
+      <Dialog
+        open={Boolean(confirmState.type)}
+        onClose={() => setConfirmState({ type: '', value: '' })}
+        maxWidth='sm'
+        fullWidth
+        slotProps={{
+          backdrop: {
+            sx: {
+              backgroundColor: 'rgba(0, 0, 0, 0.82)',
+            },
+          },
+        }}
+        PaperProps={{
+          sx: {
+            backgroundColor: 'rgba(8, 12, 8, 0.96)',
+            overflow: 'hidden',
+          },
+        }}
+      >
+        <DialogTitle>
+          <Stack direction='row' justifyContent='space-between' alignItems='center'>
+            <Typography variant='h6'>Подтверждение удаления</Typography>
+            <IconButton
+              color='error'
+              onClick={() => setConfirmState({ type: '', value: '' })}
+              aria-label='Закрыть'
+            >
+              <Close />
+            </IconButton>
+          </Stack>
+        </DialogTitle>
+        <DialogContent sx={{ pt: 1 }}>
+          {deleteDialogText ? <Typography variant='h6' color='text.secondary'>{deleteDialogText}</Typography> : null}
+        </DialogContent>
         <DialogActions>
-          <Button color='inherit' onClick={() => setConfirmState({ type: '', value: '' })}>
+          <Button color='success' onClick={() => setConfirmState({ type: '', value: '' })}>
             Отмена
           </Button>
           <Button color='error' variant='contained' onClick={onDeleteConfirm}>
@@ -505,8 +655,16 @@ export const DashboardClient = ({
         onClose={closePreview}
         maxWidth='lg'
         fullWidth
+        slotProps={{
+          backdrop: {
+            sx: {
+              backgroundColor: 'rgba(0, 0, 0, 0.82)',
+            },
+          },
+        }}
         PaperProps={{
           sx: {
+            backgroundColor: 'rgba(8, 12, 8, 0.96)',
             overflow: 'hidden',
           },
         }}
@@ -520,16 +678,16 @@ export const DashboardClient = ({
           </Stack>
         </DialogTitle>
         <DialogContent sx={{ overflow: 'hidden', pb: 2 }}>
-          <DialogContentText sx={{ mb: 1.5 }}>Нажми вне окна или Esc, чтобы закрыть просмотр.</DialogContentText>
           {previewImageUrl ? (
             <Stack direction='row' spacing={1} alignItems='center' justifyContent='center' sx={{ minHeight: '70vh', overflow: 'hidden' }}>
-              <IconButton
-                color='primary'
-                disabled={previewImages.length <= 1}
-                onClick={() => setPreviewImageIndex((prev) => (prev - 1 + previewImages.length) % previewImages.length)}
-              >
-                <ChevronLeft />
-              </IconButton>
+              {previewImages.length > 1 ? (
+                <IconButton
+                  color='success'
+                  onClick={() => setPreviewImageIndex((prev) => (prev - 1 + previewImages.length) % previewImages.length)}
+                >
+                  <ChevronLeft />
+                </IconButton>
+              ) : null}
               <Box
                 component='img'
                 src={previewImageUrl}
@@ -541,17 +699,34 @@ export const DashboardClient = ({
                   borderRadius: 1,
                 }}
               />
-              <IconButton
-                color='primary'
-                disabled={previewImages.length <= 1}
-                onClick={() => setPreviewImageIndex((prev) => (prev + 1) % previewImages.length)}
-              >
-                <ChevronRight />
-              </IconButton>
+              {previewImages.length > 1 ? (
+                <IconButton
+                  color='success'
+                  onClick={() => setPreviewImageIndex((prev) => (prev + 1) % previewImages.length)}
+                >
+                  <ChevronRight />
+                </IconButton>
+              ) : null}
             </Stack>
           ) : null}
         </DialogContent>
       </Dialog>
+
+      {isScrollTopVisible ? (
+        <Fab
+          color='success'
+          size='small'
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          sx={{
+            position: 'fixed',
+            right: 20,
+            bottom: 20,
+            zIndex: 1300,
+          }}
+        >
+          <KeyboardArrowUp />
+        </Fab>
+      ) : null}
     </Stack>
   )
 }
