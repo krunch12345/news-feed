@@ -13,7 +13,7 @@ const handler = async (req, res) => {
 
   const time = String(req.body?.time || '').trim()
   if (!time) {
-    res.redirect(303, '/?tab=schedule')
+    res.redirect(303, '/schedule')
     return
   }
 
@@ -23,7 +23,7 @@ const handler = async (req, res) => {
     times.sort()
     await saveSchedule(times)
   }
-  res.redirect(303, '/?tab=schedule')
+  res.redirect(303, '/schedule')
 }
 
 export default handler

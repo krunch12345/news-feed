@@ -17,7 +17,7 @@ const handler = async (req, res) => {
   if (filtered.length !== allGroups.length) {
     await saveGroups(filtered)
   }
-  res.redirect(303, '/?tab=groups')
+  res.redirect(303, '/groups')
 }
 
 export default handler

@@ -1,0 +1,33 @@
+export const POST_CARD_CONTAINER_SX = {
+  position: 'relative',
+  borderRadius: '24px',
+  padding: '5px',
+  overflow: 'visible',
+  backgroundColor: 'transparent',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    inset: 0,
+    borderRadius: '24px',
+    padding: '4px',
+    background: 'linear-gradient(270deg, #6cff00, #00b894, #2dff7f, #1de9b6)',
+    backgroundSize: '320% 320%',
+    animation: 'postNeonGlow 8s ease-in-out infinite',
+    WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+    WebkitMaskComposite: 'xor',
+    maskComposite: 'exclude',
+    opacity: 0.66,
+    transition: 'opacity 0.3s ease',
+    pointerEvents: 'none',
+    filter: 'drop-shadow(0 0 9px rgba(77, 255, 121, 0.46))',
+  },
+  '&:hover::before': {
+    opacity: 1,
+    animation: 'postNeonGlow 10s ease-in-out infinite',
+  },
+  '@keyframes postNeonGlow': {
+    '0%': { backgroundPosition: '0% 50%' },
+    '50%': { backgroundPosition: '100% 50%' },
+    '100%': { backgroundPosition: '0% 50%' },
+  },
+}

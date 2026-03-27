@@ -17,7 +17,7 @@ const handler = async (req, res) => {
   if (filtered.length !== times.length) {
     await saveSchedule(filtered)
   }
-  res.redirect(303, '/?tab=schedule')
+  res.redirect(303, '/schedule')
 }
 
 export default handler
