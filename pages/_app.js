@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { CssBaseline, ThemeProvider, createTheme } from '@mui/material'
+import { useRouter } from 'next/router'
 import PropTypes from 'prop-types'
 import { AppAlert } from '@/common/components/AppAlert'
+import { LoadingBackdrop } from '@/common/components/LoadingBackdrop'
 import { AppAlertContext } from '@/common/hooks/useAppAlert'
 import '../styles/globals.css'
 
@@ -48,7 +50,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           '&.Mui-focused': {
-            color: '#66ff8a',
+            color: '#4caf50',
           },
         },
       },
@@ -57,7 +59,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-            borderColor: '#66ff8a',
+            borderColor: '#4caf50',
           },
         },
       },
@@ -66,7 +68,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           '.Mui-focused &': {
-            color: '#66ff8a',
+            color: '#4caf50',
           },
         },
       },
@@ -77,12 +79,15 @@ const theme = createTheme({
 const APP_ALERT_STORAGE_KEY = 'app.alert.payload'
 
 const App = ({ Component, pageProps }) => {
+  const router = useRouter()
   const [alertState, setAlertState] = useState({
     open: false,
     severity: 'success',
     message: '',
   })
   const [progress, setProgress] = useState(100)
+  const [isRouteLoading, setIsRouteLoading] = useState(false)
+  const [pendingRequests, setPendingRequests] = useState(0)
 
   const autoHideDuration = useMemo(
     () => (alertState.severity === 'error' ? 10000 : 5000),
@@ -126,6 +131,44 @@ const App = ({ Component, pageProps }) => {
     }
   }, [])
 
+  useEffect(() => {
+    const handleRouteStart = () => {
+      setIsRouteLoading(true)
+    }
+
+    const handleRouteEnd = () => {
+      setIsRouteLoading(false)
+    }
+
+    router.events.on('routeChangeStart', handleRouteStart)
+    router.events.on('routeChangeComplete', handleRouteEnd)
+    router.events.on('routeChangeError', handleRouteEnd)
+
+    return () => {
+      router.events.off('routeChangeStart', handleRouteStart)
+      router.events.off('routeChangeComplete', handleRouteEnd)
+      router.events.off('routeChangeError', handleRouteEnd)
+    }
+  }, [router.events])
+
+  useEffect(() => {
+    const originalFetch = window.fetch.bind(window)
+
+    window.fetch = async (...args) => {
+      setPendingRequests((value) => value + 1)
+
+      try {
+        return await originalFetch(...args)
+      } finally {
+        setPendingRequests((value) => Math.max(value - 1, 0))
+      }
+    }
+
+    return () => {
+      window.fetch = originalFetch
+    }
+  }, [])
+
   const closeAlert = () => {
     setAlertState((value) => ({ ...value, open: false }))
   }
@@ -145,11 +188,13 @@ const App = ({ Component, pageProps }) => {
     })
   }
 
+  const isGlobalLoading = isRouteLoading || pendingRequests > 0
+
   return (
     <ThemeProvider theme={theme}>
       <AppAlertContext.Provider value={{ showAlert }}>
         <CssBaseline />
-        
+        <LoadingBackdrop open={isGlobalLoading} />
         <Component {...pageProps} />
 
         <AppAlert

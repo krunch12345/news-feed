@@ -12,7 +12,6 @@ import {
   MenuItem,
   Paper,
   Stack,
-  Typography,
   useMediaQuery,
 } from '@mui/material'
 import {
@@ -23,7 +22,7 @@ import {
   Refresh,
   Schedule,
 } from '@mui/icons-material'
-import { LOGO_TYPOGRAPHY_SX } from '@/common/components/AppHeader/constants/logoTypographySx'
+import { AppLogo } from '@/common/components/AppLogo'
 
 /**
  * Renders the sticky top header with logo and navigation.
@@ -250,17 +249,11 @@ export const AppHeader = ({ location }) => {
         gap={2}
       >
         <Stack direction='row' alignItems='center' spacing={1.5}>
-          <Typography
+          <AppLogo
             component={Link}
             href='/posts'
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            variant='h5'
-            color='inherit'
-            data-text='моя вк лента'
-            sx={LOGO_TYPOGRAPHY_SX}
-          >
-            моя вк лента
-          </Typography>
+          />
 
           {isDesktop ? <DesktopMenu /> : null}
         </Stack>

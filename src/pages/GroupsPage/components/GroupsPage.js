@@ -5,6 +5,7 @@ import { Button, IconButton, List, ListItem, Stack, TextField, Typography } from
 import { DeleteConfirmModal } from '@/common/components/DeleteConfirmModal/components/DeleteConfirmModal'
 import { buildDeleteDialogText } from '@/common/components/DeleteConfirmModal/utils/buildDeleteDialogText'
 import { TitleSummary } from '@/common/components/TitleSummary/components/TitleSummary'
+import { RELOAD_DELAY_MS } from '@/common/constants/loadingTimings'
 import { useAppAlert } from '@/common/hooks/useAppAlert'
 import { MainLayout } from '@/layouts/MainLayout/components/MainLayout'
 import { AddGroupModal } from '@/pages/GroupsPage/components/AddGroupModal'
@@ -46,7 +47,9 @@ export const GroupsPage = ({ groups, groupQuery, totalGroups }) => {
       }
 
       showAlert('success', 'Сообщество удалено', { persistOnReload: true })
-      window.location.reload()
+      window.setTimeout(() => {
+        window.location.reload()
+      }, RELOAD_DELAY_MS)
     } catch {
       showAlert('error', 'Ошибка при удалении сообщества')
     }
@@ -78,7 +81,9 @@ export const GroupsPage = ({ groups, groupQuery, totalGroups }) => {
     }
 
     showAlert('success', 'Сообщество добавлено', { persistOnReload: true })
-    window.location.reload()
+    window.setTimeout(() => {
+      window.location.reload()
+    }, RELOAD_DELAY_MS)
   }
 
   const onGroupIdChange = (event) => {

@@ -5,6 +5,7 @@ import { DeleteConfirmModal } from '@/common/components/DeleteConfirmModal/compo
 import { buildDeleteDialogText } from '@/common/components/DeleteConfirmModal/utils/buildDeleteDialogText'
 import { StyledPagination } from '@/common/components/StyledPagination/components/StyledPagination'
 import { TitleSummary } from '@/common/components/TitleSummary/components/TitleSummary'
+import { RELOAD_DELAY_MS } from '@/common/constants/loadingTimings'
 import { useAppAlert } from '@/common/hooks/useAppAlert'
 import { MainLayout } from '@/layouts/MainLayout/components/MainLayout'
 import { ImagePreviewModal } from '@/pages/PostsPage/components/ImagePreviewModal'
@@ -48,7 +49,9 @@ export const PostsPage = ({ page, totalPages, totalPosts, posts }) => {
         }
 
         showAlert('success', 'Пост удален', { persistOnReload: true })
-        window.location.reload()
+        window.setTimeout(() => {
+          window.location.reload()
+        }, RELOAD_DELAY_MS)
       } catch {
         showAlert('error', 'Ошибка при удалении поста')
       }

@@ -5,6 +5,7 @@ import { Button, Stack, TextField, Typography } from '@mui/material'
 import { DeleteConfirmModal } from '@/common/components/DeleteConfirmModal/components/DeleteConfirmModal'
 import { buildDeleteDialogText } from '@/common/components/DeleteConfirmModal/utils/buildDeleteDialogText'
 import { TitleSummary } from '@/common/components/TitleSummary/components/TitleSummary'
+import { RELOAD_DELAY_MS } from '@/common/constants/loadingTimings'
 import { useAppAlert } from '@/common/hooks/useAppAlert'
 import { MainLayout } from '@/layouts/MainLayout/components/MainLayout'
 import { ScheduleTimeList } from '@/pages/SchedulePage/components/ScheduleTimeListItem'
@@ -39,7 +40,9 @@ export const SchedulePage = ({ totalSchedule, scheduleTimes }) => {
         }
 
         showAlert('success', 'Тайминг удален', { persistOnReload: true })
-        window.location.reload()
+        window.setTimeout(() => {
+          window.location.reload()
+        }, RELOAD_DELAY_MS)
       } catch {
         showAlert('error', 'Ошибка при удалении тайминга')
       }
@@ -64,7 +67,9 @@ export const SchedulePage = ({ totalSchedule, scheduleTimes }) => {
       }
 
       showAlert('success', 'Тайминг добавлен', { persistOnReload: true })
-      window.location.reload()
+      window.setTimeout(() => {
+        window.location.reload()
+      }, RELOAD_DELAY_MS)
     } catch {
       showAlert('error', 'Ошибка при добавлении тайминга')
     }
