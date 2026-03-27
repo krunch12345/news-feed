@@ -5,6 +5,7 @@ import { Button, IconButton, List, ListItem, Stack, TextField, Typography } from
 import { DeleteConfirmModal } from '@/common/components/DeleteConfirmModal/components/DeleteConfirmModal'
 import { buildDeleteDialogText } from '@/common/components/DeleteConfirmModal/utils/buildDeleteDialogText'
 import { TitleSummary } from '@/common/components/TitleSummary/components/TitleSummary'
+import { useAppAlert } from '@/common/hooks/useAppAlert'
 import { MainLayout } from '@/layouts/MainLayout/components/MainLayout'
 import { AddGroupModal } from '@/pages/GroupsPage/components/AddGroupModal'
 
@@ -17,6 +18,7 @@ import { AddGroupModal } from '@/pages/GroupsPage/components/AddGroupModal'
  * @returns {JSX.Element} Groups page component.
  */
 export const GroupsPage = ({ groups, groupQuery, totalGroups }) => {
+  const { showAlert } = useAppAlert()
   const [confirmState, setConfirmState] = useState({ type: '', value: '' })
   const [isGroupDialogOpen, setIsGroupDialogOpen] = useState(false)
   const [groupId, setGroupId] = useState('')
@@ -30,35 +32,53 @@ export const GroupsPage = ({ groups, groupQuery, totalGroups }) => {
       return
     }
 
-    const formData = new FormData()
-    formData.append('group_id', confirmState.value)
+    try {
+      const response = await fetch('/api/groups/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ group_id: confirmState.value }),
+      })
+      const data = await response.json().catch(() => null)
 
-    await fetch('/api/groups/delete', { method: 'POST', body: formData })
+      if (!response.ok) {
+        showAlert('error', data?.message || 'Ошибка при удалении сообщества')
+        return
+      }
 
-    window.location.reload()
+      showAlert('success', 'Сообщество удалено', { persistOnReload: true })
+      window.location.reload()
+    } catch {
+      showAlert('error', 'Ошибка при удалении сообщества')
+    }
   }
 
   const onGroupAdd = async () => {
     const digitsOnly = groupId.replace(/\D/g, '')
     if (!digitsOnly) {
-      setGroupError('ID сообщества не может быть пустым')
+      const message = 'ID сообщества не может быть пустым'
+      setGroupError(message)
+      showAlert('error', message)
       return
     }
 
-    const formData = new FormData()
-    formData.append('group_id', `-${digitsOnly}`)
-    formData.append('group_name', groupName.trim())
-
-    const response = await fetch('/api/groups/add', { method: 'POST', body: formData })
+    const formattedGroupId = `-${digitsOnly}`
+    const trimmedGroupName = groupName.trim()
+    const response = await fetch('/api/groups/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ group_id: formattedGroupId, group_name: trimmedGroupName }),
+    })
     const data = await response.json().catch(() => null)
 
     if (!response.ok) {
-      setGroupError(data?.message || 'Ошибка при добавлении сообщества')
+      const message = data?.message || 'Ошибка при добавлении сообщества'
+      setGroupError(message)
+      showAlert('error', message)
       return
     }
 
-    setIsGroupDialogOpen(false)
-    window.location.href = '/groups'
+    showAlert('success', 'Сообщество добавлено', { persistOnReload: true })
+    window.location.reload()
   }
 
   const onGroupIdChange = (event) => {

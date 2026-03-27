@@ -3,7 +3,7 @@ import { isRequestAuthorizedFromNodeRequest } from '@/lib/auth'
 
 const handler = async (req, res) => {
   if (req.method !== 'POST') {
-    res.status(405).end()
+    res.status(405).json({ status: 'error', message: 'Method not allowed' })
     return
   }
   if (!isRequestAuthorizedFromNodeRequest(req)) {
@@ -11,8 +11,18 @@ const handler = async (req, res) => {
     return
   }
 
-  await deletePostById(String(req.query.postId || ''))
-  res.status(200).json({ status: 'ok' })
+  const postId = String(req.query.postId || '').trim()
+  if (!postId) {
+    res.status(400).json({ status: 'error', message: 'Не передан ID поста для удаления' })
+    return
+  }
+
+  try {
+    await deletePostById(postId)
+    res.status(200).json({ status: 'ok' })
+  } catch {
+    res.status(500).json({ status: 'error', message: 'Не удалось удалить пост' })
+  }
 }
 
 export default handler

@@ -5,6 +5,7 @@ import { Button, Stack, TextField, Typography } from '@mui/material'
 import { DeleteConfirmModal } from '@/common/components/DeleteConfirmModal/components/DeleteConfirmModal'
 import { buildDeleteDialogText } from '@/common/components/DeleteConfirmModal/utils/buildDeleteDialogText'
 import { TitleSummary } from '@/common/components/TitleSummary/components/TitleSummary'
+import { useAppAlert } from '@/common/hooks/useAppAlert'
 import { MainLayout } from '@/layouts/MainLayout/components/MainLayout'
 import { ScheduleTimeList } from '@/pages/SchedulePage/components/ScheduleTimeListItem'
 
@@ -16,18 +17,56 @@ import { ScheduleTimeList } from '@/pages/SchedulePage/components/ScheduleTimeLi
  * @returns {JSX.Element} Schedule page content.
  */
 export const SchedulePage = ({ totalSchedule, scheduleTimes }) => {
+  const { showAlert } = useAppAlert()
   const [confirmState, setConfirmState] = useState({ type: '', value: '' })
+  const [newTime, setNewTime] = useState('')
   
   const deleteDialogText = useMemo(() => buildDeleteDialogText(confirmState, [], []), [confirmState])
 
   const onDeleteConfirm = async () => {
     if (confirmState.value) {
-      const formData = new FormData()
-      formData.append('time', confirmState.value)
+      try {
+        const response = await fetch('/api/schedule/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ time: confirmState.value }),
+        })
+        const data = await response.json().catch(() => null)
 
-      await fetch('/api/schedule/delete', { method: 'POST', body: formData })
+        if (!response.ok) {
+          showAlert('error', data?.message || 'Ошибка при удалении тайминга')
+          return
+        }
 
+        showAlert('success', 'Тайминг удален', { persistOnReload: true })
+        window.location.reload()
+      } catch {
+        showAlert('error', 'Ошибка при удалении тайминга')
+      }
+    }
+  }
+
+  const onAddScheduleSubmit = async (event) => {
+    event.preventDefault()
+
+    try {
+      const trimmedTime = newTime.trim()
+      const response = await fetch('/api/schedule/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ time: trimmedTime }),
+      })
+      const data = await response.json().catch(() => null)
+
+      if (!response.ok) {
+        showAlert('error', data?.message || 'Ошибка при добавлении тайминга')
+        return
+      }
+
+      showAlert('success', 'Тайминг добавлен', { persistOnReload: true })
       window.location.reload()
+    } catch {
+      showAlert('error', 'Ошибка при добавлении тайминга')
     }
   }
 
@@ -40,9 +79,17 @@ export const SchedulePage = ({ totalSchedule, scheduleTimes }) => {
       <Stack spacing={2} maxWidth={520} alignSelf='center' width='100%'>
         <TitleSummary>всего таймингов: {totalSchedule}</TitleSummary>
 
-        <form action='/api/schedule/add' method='post'>
+        <form onSubmit={onAddScheduleSubmit}>
           <Stack direction='row' spacing={1}>
-            <TextField type='time' name='time' required fullWidth size='small' />
+            <TextField
+              type='time'
+              name='time'
+              required
+              fullWidth
+              size='small'
+              value={newTime}
+              onChange={(event) => setNewTime(event.target.value)}
+            />
 
             <Button
               type='submit'

@@ -5,6 +5,7 @@ import { DeleteConfirmModal } from '@/common/components/DeleteConfirmModal/compo
 import { buildDeleteDialogText } from '@/common/components/DeleteConfirmModal/utils/buildDeleteDialogText'
 import { StyledPagination } from '@/common/components/StyledPagination/components/StyledPagination'
 import { TitleSummary } from '@/common/components/TitleSummary/components/TitleSummary'
+import { useAppAlert } from '@/common/hooks/useAppAlert'
 import { MainLayout } from '@/layouts/MainLayout/components/MainLayout'
 import { ImagePreviewModal } from '@/pages/PostsPage/components/ImagePreviewModal'
 import { PostCard } from '@/pages/PostsPage/components/PostCard'
@@ -21,6 +22,7 @@ import { buildPostText } from '@/pages/PostsPage/utils/buildPostText'
  * @returns {JSX.Element} Posts page component.
  */
 export const PostsPage = ({ page, totalPages, totalPosts, posts }) => {
+  const { showAlert } = useAppAlert()
   const [confirmState, setConfirmState] = useState({ type: '', value: '' })
   const [previewImages, setPreviewImages] = useState([])
   const [previewImageIndex, setPreviewImageIndex] = useState(0)
@@ -36,8 +38,20 @@ export const PostsPage = ({ page, totalPages, totalPosts, posts }) => {
 
   const onDeleteConfirm = async () => {
     if (confirmState.value) {
-      await fetch(`/api/delete/${encodeURIComponent(confirmState.value)}`, { method: 'POST' })
-      window.location.reload()
+      try {
+        const response = await fetch(`/api/delete/${encodeURIComponent(confirmState.value)}`, { method: 'POST' })
+        const data = await response.json().catch(() => null)
+
+        if (!response.ok) {
+          showAlert('error', data?.message || 'Ошибка при удалении поста')
+          return
+        }
+
+        showAlert('success', 'Пост удален', { persistOnReload: true })
+        window.location.reload()
+      } catch {
+        showAlert('error', 'Ошибка при удалении поста')
+      }
     }
   }
 
@@ -58,8 +72,9 @@ export const PostsPage = ({ page, totalPages, totalPosts, posts }) => {
   const onCopyClick = async (post) => {
     try {
       await navigator.clipboard.writeText(buildPostText(post))
+      showAlert('success', 'Текст скопирован')
     } catch {
-      window.alert('Не удалось скопировать текст')
+      showAlert('error', 'Не удалось скопировать текст')
     }
   }
 

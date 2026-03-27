@@ -3,7 +3,7 @@ import { isRequestAuthorizedFromNodeRequest } from '@/lib/auth'
 
 const handler = async (req, res) => {
   if (req.method !== 'POST') {
-    res.status(405).end()
+    res.status(405).json({ status: 'error', message: 'Method not allowed' })
     return
   }
   if (!isRequestAuthorizedFromNodeRequest(req)) {
@@ -13,17 +13,24 @@ const handler = async (req, res) => {
 
   const time = String(req.body?.time || '').trim()
   if (!time) {
-    res.redirect(303, '/schedule')
+    res.status(400).json({ status: 'error', message: 'Тайминг не может быть пустым' })
     return
   }
 
-  const times = await loadSchedule()
-  if (!times.includes(time)) {
+  try {
+    const times = await loadSchedule()
+    if (times.includes(time)) {
+      res.status(400).json({ status: 'error', message: 'Такой тайминг уже существует' })
+      return
+    }
+
     times.push(time)
     times.sort()
     await saveSchedule(times)
+    res.status(200).json({ status: 'ok' })
+  } catch {
+    res.status(500).json({ status: 'error', message: 'Не удалось сохранить тайминг' })
   }
-  res.redirect(303, '/schedule')
 }
 
 export default handler
