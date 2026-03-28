@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/router'
 import PropTypes from 'prop-types'
 import {
@@ -26,7 +27,7 @@ import { AppLogo } from '@/common/components/AppLogo'
 const HeaderDesktopNav = ({ location }) => (
   <>
     <Button
-      component='a'
+      component={Link}
       href='/posts'
       size='small'
       variant={location.isPosts ? 'contained' : 'text'}
@@ -37,7 +38,7 @@ const HeaderDesktopNav = ({ location }) => (
     </Button>
 
     <Button
-      component='a'
+      component={Link}
       href='/schedule'
       size='small'
       variant={location.isSchedule ? 'contained' : 'text'}
@@ -48,7 +49,7 @@ const HeaderDesktopNav = ({ location }) => (
     </Button>
 
     <Button
-      component='a'
+      component={Link}
       href='/groups'
       size='small'
       variant={location.isGroups ? 'contained' : 'text'}
@@ -113,7 +114,7 @@ const HeaderMobileNav = ({
       }}
     >
       <MenuItem
-        component='a'
+        component={Link}
         href='/posts'
         selected={location.isPosts}
         onClick={onCloseNavMenu}
@@ -135,7 +136,7 @@ const HeaderMobileNav = ({
       </MenuItem>
 
       <MenuItem
-        component='a'
+        component={Link}
         href='/schedule'
         selected={location.isSchedule}
         onClick={onCloseNavMenu}
@@ -157,7 +158,7 @@ const HeaderMobileNav = ({
       </MenuItem>
 
       <MenuItem
-        component='a'
+        component={Link}
         href='/groups'
         selected={location.isGroups}
         onClick={onCloseNavMenu}
@@ -181,7 +182,7 @@ const HeaderMobileNav = ({
       <Divider />
 
       <MenuItem
-        component='a'
+        component={Link}
         href={currentPath}
         onClick={onCloseNavMenu}
         sx={{
@@ -277,7 +278,7 @@ export const AppHeader = ({ location }) => {
       >
         <Stack direction='row' alignItems='center' spacing={1.5}>
           <AppLogo
-            component='a'
+            component={Link}
             href='/posts'
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           />
@@ -288,7 +289,7 @@ export const AppHeader = ({ location }) => {
         {isDesktop ? (
           <Stack direction='row' spacing={1} alignItems='center'>
             <Button
-              component='a'
+              component={Link}
               href={currentPath}
               variant='outlined'
               color='success'
