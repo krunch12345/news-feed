@@ -7,7 +7,7 @@ Single-project VK communities wall aggregator built with Next.js, MUI, and Node.
 - Next.js (Pages Router) + MUI.
 - Server-side API routes in `pages/api`.
 - Domain logic and storage in `src/lib`.
-- Node scheduler script in `scripts/scheduler.js`.
+- Node scheduler script in `scripts/scheduler.mjs`.
 - Yarn as the package manager.
 
 ### Features
@@ -26,7 +26,7 @@ Single-project VK communities wall aggregator built with Next.js, MUI, and Node.
 - `pages/` — UI pages and API endpoints.
 - `src/components/` — React UI components.
 - `src/lib/` — config, auth, storage, VK client, services.
-- `scripts/scheduler.js` — scheduler process for periodic updates.
+- `scripts/scheduler.mjs` — scheduler process for periodic updates.
 - `data/` — runtime JSON data.
 - `postsImages/` — runtime post images.
 - `.env.example` — environment variables template.
