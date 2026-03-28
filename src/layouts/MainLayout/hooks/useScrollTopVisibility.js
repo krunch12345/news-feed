@@ -16,7 +16,7 @@ export const useScrollTopVisibility = () => {
     }
 
     updateScrollTopVisibility()
-    
+
     window.addEventListener('resize', updateScrollTopVisibility, { passive: true })
     window.addEventListener('scroll', updateScrollTopVisibility, { passive: true })
 

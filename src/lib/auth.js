@@ -1,4 +1,5 @@
 import { appConfig } from '@/lib/config'
+import { sessionUserMatches } from '@/lib/sessionCookie'
 
 export const isFrontendAuthEnabled = () => Boolean(appConfig.authUser || appConfig.authPass)
 
@@ -12,7 +13,7 @@ export const isFrontendAuthenticatedFromRequest = (request) => {
   if (!isFrontendAuthEnabled()) {
     return true
   }
-  return request?.cookies?.session_user === appConfig.authUser
+  return sessionUserMatches(request?.cookies?.session_user, appConfig.authUser)
 }
 
 export const isRequestAuthorizedFromNodeRequest = (request) => {

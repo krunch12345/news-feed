@@ -16,7 +16,7 @@ export const ScheduleTimeList = ({ scheduleTimes, onOpenDelete }) => {
       <ListItem>
         <Stack direction='row' justifyContent='space-between' alignItems='center' width='100%'>
           <Typography>{timeValue}</Typography>
-          
+
           <IconButton edge='end' color='error' onClick={() => onOpenDelete({ type: 'schedule', value: timeValue })}>
             <DeleteForever />
           </IconButton>

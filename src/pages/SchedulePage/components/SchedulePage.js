@@ -21,7 +21,7 @@ export const SchedulePage = ({ totalSchedule, scheduleTimes }) => {
   const { showAlert } = useAppAlert()
   const [confirmState, setConfirmState] = useState({ type: '', value: '' })
   const [newTime, setNewTime] = useState('')
-  
+
   const deleteDialogText = useMemo(() => buildDeleteDialogText(confirmState, [], []), [confirmState])
 
   const onDeleteConfirm = async () => {

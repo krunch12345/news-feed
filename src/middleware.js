@@ -1,13 +1,17 @@
 import { NextResponse } from 'next/server'
+import { sessionUserMatches } from '@/lib/sessionCookie'
 
-const isProtectedPath = (pathname) => {
-  if (pathname.startsWith('/api/login') || pathname.startsWith('/login')) {
-    return false
+const isPublicPath = (pathname) => {
+  if (pathname === '/login' || pathname.startsWith('/login/')) {
+    return true
+  }
+  if (pathname.startsWith('/api/login')) {
+    return true
   }
   if (pathname.startsWith('/_next') || pathname === '/favicon.ico') {
-    return false
+    return true
   }
-  return pathname === '/' || pathname.startsWith('/api/') || pathname.startsWith('/images/')
+  return false
 }
 
 export const middleware = (request) => {
@@ -17,16 +21,19 @@ export const middleware = (request) => {
   if (!authUser && !authPass) {
     return NextResponse.next()
   }
-  if (!isProtectedPath(request.nextUrl.pathname)) {
+
+  const pathname = request.nextUrl.pathname
+
+  if (isPublicPath(pathname)) {
     return NextResponse.next()
   }
 
   const sessionUser = request.cookies.get('session_user')?.value
-  if (sessionUser === authUser) {
+  if (sessionUserMatches(sessionUser, authUser)) {
     return NextResponse.next()
   }
 
-  if (request.nextUrl.pathname.startsWith('/api/')) {
+  if (pathname.startsWith('/api/')) {
     return NextResponse.json({ status: 'error', message: 'Unauthorized' }, { status: 401 })
   }
 

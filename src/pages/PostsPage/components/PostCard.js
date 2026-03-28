@@ -66,7 +66,7 @@ export const PostCard = ({ post, onCopyClick, onDeleteClick, onOpenPreview }) =>
 
             <Typography variant='body2'>{post.date_human}</Typography>
           </Stack>
-          
+
           <Typography whiteSpace='pre-line'>{post.text || 'Без текста'}</Typography>
 
           {postImages.length ? (

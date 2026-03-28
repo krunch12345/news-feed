@@ -56,8 +56,10 @@ export const LoadingBackdrop = ({ open }) => {
         showStartTimeRef.current = Date.now()
       }
 
-      setShouldRender(true)
-      setIsVisible(true)
+      queueMicrotask(() => {
+        setShouldRender(true)
+        setIsVisible(true)
+      })
       return
     }
 

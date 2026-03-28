@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/router'
 import PropTypes from 'prop-types'
 import {
@@ -23,6 +22,207 @@ import {
   Schedule,
 } from '@mui/icons-material'
 import { AppLogo } from '@/common/components/AppLogo'
+
+const HeaderDesktopNav = ({ location }) => (
+  <>
+    <Button
+      component='a'
+      href='/posts'
+      size='small'
+      variant={location.isPosts ? 'contained' : 'text'}
+      color='success'
+      startIcon={<DynamicFeed />}
+    >
+      Посты
+    </Button>
+
+    <Button
+      component='a'
+      href='/schedule'
+      size='small'
+      variant={location.isSchedule ? 'contained' : 'text'}
+      color='success'
+      startIcon={<Schedule />}
+    >
+      Расписание
+    </Button>
+
+    <Button
+      component='a'
+      href='/groups'
+      size='small'
+      variant={location.isGroups ? 'contained' : 'text'}
+      color='success'
+      startIcon={<Groups />}
+    >
+      Сообщества
+    </Button>
+  </>
+)
+
+HeaderDesktopNav.propTypes = {
+  location: PropTypes.shape({
+    isPosts: PropTypes.bool.isRequired,
+    isSchedule: PropTypes.bool.isRequired,
+    isGroups: PropTypes.bool.isRequired,
+  }).isRequired,
+}
+
+const HeaderMobileNav = ({
+  location,
+  currentPath,
+  navMenuAnchorEl,
+  isNavMenuOpen,
+  onOpenNavMenu,
+  onCloseNavMenu,
+}) => (
+  <>
+    <IconButton
+      size='large'
+      color='success'
+      aria-label='Открыть меню навигации'
+      aria-controls={isNavMenuOpen ? 'app-header-nav-menu' : undefined}
+      aria-haspopup='true'
+      onClick={onOpenNavMenu}
+    >
+      <MenuIcon />
+    </IconButton>
+
+    <Menu
+      id='app-header-nav-menu'
+      anchorEl={navMenuAnchorEl}
+      open={isNavMenuOpen}
+      onClose={onCloseNavMenu}
+      anchorOrigin={{
+        vertical: 'bottom',
+        horizontal: 'right',
+      }}
+      transformOrigin={{
+        vertical: 'top',
+        horizontal: 'right',
+      }}
+      slotProps={{
+        paper: {
+          sx: {
+            backgroundColor: 'rgba(8, 12, 8, 0.96)',
+            backgroundImage: 'linear-gradient(135deg, rgba(5, 14, 11, 0.96) 0%, rgba(8, 26, 19, 0.9) 100%)',
+            border: '1px solid rgba(108, 255, 0, 0.25)',
+            minWidth: 220,
+          },
+        },
+      }}
+    >
+      <MenuItem
+        component='a'
+        href='/posts'
+        selected={location.isPosts}
+        onClick={onCloseNavMenu}
+        sx={{
+          color: '#d8ffe1',
+          '&.Mui-selected': {
+            backgroundColor: 'rgba(45, 120, 50, 0.45)',
+            color: '#ffffff',
+          },
+          '&.Mui-selected:hover': {
+            backgroundColor: 'rgba(57, 158, 69, 0.52)',
+          },
+          '&:hover': {
+            backgroundColor: 'rgba(45, 120, 50, 0.28)',
+          },
+        }}
+      >
+        <DynamicFeed sx={{ mr: 1 }} /> Посты
+      </MenuItem>
+
+      <MenuItem
+        component='a'
+        href='/schedule'
+        selected={location.isSchedule}
+        onClick={onCloseNavMenu}
+        sx={{
+          color: '#d8ffe1',
+          '&.Mui-selected': {
+            backgroundColor: 'rgba(45, 120, 50, 0.45)',
+            color: '#ffffff',
+          },
+          '&.Mui-selected:hover': {
+            backgroundColor: 'rgba(57, 158, 69, 0.52)',
+          },
+          '&:hover': {
+            backgroundColor: 'rgba(45, 120, 50, 0.28)',
+          },
+        }}
+      >
+        <Schedule sx={{ mr: 1 }} /> Расписание
+      </MenuItem>
+
+      <MenuItem
+        component='a'
+        href='/groups'
+        selected={location.isGroups}
+        onClick={onCloseNavMenu}
+        sx={{
+          color: '#d8ffe1',
+          '&.Mui-selected': {
+            backgroundColor: 'rgba(45, 120, 50, 0.45)',
+            color: '#ffffff',
+          },
+          '&.Mui-selected:hover': {
+            backgroundColor: 'rgba(57, 158, 69, 0.52)',
+          },
+          '&:hover': {
+            backgroundColor: 'rgba(45, 120, 50, 0.28)',
+          },
+        }}
+      >
+        <Groups sx={{ mr: 1 }} /> Сообщества
+      </MenuItem>
+
+      <Divider />
+
+      <MenuItem
+        component='a'
+        href={currentPath}
+        onClick={onCloseNavMenu}
+        sx={{
+          color: '#d8ffe1',
+          '&:hover': {
+            backgroundColor: 'rgba(45, 120, 50, 0.28)',
+          },
+        }}
+      >
+        <Refresh sx={{ mr: 1 }} /> Обновить
+      </MenuItem>
+
+      <MenuItem
+        component='a'
+        href='/api/logout'
+        onClick={onCloseNavMenu}
+        sx={{
+          color: '#ffd6d6',
+          '&:hover': {
+            backgroundColor: 'rgba(128, 40, 40, 0.34)',
+          },
+        }}
+      >
+        <Logout sx={{ mr: 1 }} /> Выйти
+      </MenuItem>
+    </Menu>
+  </>
+)
+
+HeaderMobileNav.propTypes = {
+  location: PropTypes.shape({
+    isPosts: PropTypes.bool.isRequired,
+    isSchedule: PropTypes.bool.isRequired,
+    isGroups: PropTypes.bool.isRequired,
+  }).isRequired,
+  currentPath: PropTypes.string.isRequired,
+  navMenuAnchorEl: PropTypes.object,
+  isNavMenuOpen: PropTypes.bool.isRequired,
+  onOpenNavMenu: PropTypes.func.isRequired,
+  onCloseNavMenu: PropTypes.func.isRequired,
+}
 
 /**
  * Renders the sticky top header with logo and navigation.
@@ -46,179 +246,6 @@ export const AppHeader = ({ location }) => {
   }
 
   const currentPath = router.asPath || '/posts'
-
-  const DesktopMenu = () => (
-    <>
-      <Button
-        component={Link}
-        href='/posts'
-        size='small'
-        variant={location.isPosts ? 'contained' : 'text'}
-        color='success'
-        startIcon={<DynamicFeed />}
-      >
-        Посты
-      </Button>
-
-      <Button
-        component={Link}
-        href='/schedule'
-        size='small'
-        variant={location.isSchedule ? 'contained' : 'text'}
-        color='success'
-        startIcon={<Schedule />}
-      >
-        Расписание
-      </Button>
-
-      <Button
-        component={Link}
-        href='/groups'
-        size='small'
-        variant={location.isGroups ? 'contained' : 'text'}
-        color='success'
-        startIcon={<Groups />}
-      >
-        Сообщества
-      </Button>
-    </>
-  )
-
-  const MobileMenu = () => (
-    <>
-      <IconButton
-        size='large'
-        color='success'
-        aria-label='Открыть меню навигации'
-        aria-controls={isNavMenuOpen ? 'app-header-nav-menu' : undefined}
-        aria-haspopup='true'
-        onClick={handleOpenNavMenu}
-      >
-        <MenuIcon />
-      </IconButton>
-
-      <Menu
-        id='app-header-nav-menu'
-        anchorEl={navMenuAnchorEl}
-        open={isNavMenuOpen}
-        onClose={handleCloseNavMenu}
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'right',
-        }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'right',
-        }}
-        slotProps={{
-          paper: {
-            sx: {
-              backgroundColor: 'rgba(8, 12, 8, 0.96)',
-              backgroundImage: 'linear-gradient(135deg, rgba(5, 14, 11, 0.96) 0%, rgba(8, 26, 19, 0.9) 100%)',
-              border: '1px solid rgba(108, 255, 0, 0.25)',
-              minWidth: 220,
-            },
-          },
-        }}
-      >
-        <MenuItem
-          component={Link}
-          href='/posts'
-          selected={location.isPosts}
-          onClick={handleCloseNavMenu}
-          sx={{
-            color: '#d8ffe1',
-            '&.Mui-selected': {
-              backgroundColor: 'rgba(45, 120, 50, 0.45)',
-              color: '#ffffff',
-            },
-            '&.Mui-selected:hover': {
-              backgroundColor: 'rgba(57, 158, 69, 0.52)',
-            },
-            '&:hover': {
-              backgroundColor: 'rgba(45, 120, 50, 0.28)',
-            },
-          }}
-        >
-          <DynamicFeed sx={{ mr: 1 }} /> Посты
-        </MenuItem>
-
-        <MenuItem
-          component={Link}
-          href='/schedule'
-          selected={location.isSchedule}
-          onClick={handleCloseNavMenu}
-          sx={{
-            color: '#d8ffe1',
-            '&.Mui-selected': {
-              backgroundColor: 'rgba(45, 120, 50, 0.45)',
-              color: '#ffffff',
-            },
-            '&.Mui-selected:hover': {
-              backgroundColor: 'rgba(57, 158, 69, 0.52)',
-            },
-            '&:hover': {
-              backgroundColor: 'rgba(45, 120, 50, 0.28)',
-            },
-          }}
-        >
-          <Schedule sx={{ mr: 1 }} /> Расписание
-        </MenuItem>
-
-        <MenuItem
-          component={Link}
-          href='/groups'
-          selected={location.isGroups}
-          onClick={handleCloseNavMenu}
-          sx={{
-            color: '#d8ffe1',
-            '&.Mui-selected': {
-              backgroundColor: 'rgba(45, 120, 50, 0.45)',
-              color: '#ffffff',
-            },
-            '&.Mui-selected:hover': {
-              backgroundColor: 'rgba(57, 158, 69, 0.52)',
-            },
-            '&:hover': {
-              backgroundColor: 'rgba(45, 120, 50, 0.28)',
-            },
-          }}
-        >
-          <Groups sx={{ mr: 1 }} /> Сообщества
-        </MenuItem>
-
-        <Divider />
-
-        <MenuItem
-          component={Link}
-          href={currentPath}
-          onClick={handleCloseNavMenu}
-          sx={{
-            color: '#d8ffe1',
-            '&:hover': {
-              backgroundColor: 'rgba(45, 120, 50, 0.28)',
-            },
-          }}
-        >
-          <Refresh sx={{ mr: 1 }} /> Обновить
-        </MenuItem>
-
-        <MenuItem
-          component={Link}
-          href='/api/logout'
-          onClick={handleCloseNavMenu}
-          sx={{
-            color: '#ffd6d6',
-            '&:hover': {
-              backgroundColor: 'rgba(128, 40, 40, 0.34)',
-            },
-          }}
-        >
-          <Logout sx={{ mr: 1 }} /> Выйти
-        </MenuItem>
-      </Menu>
-    </>
-  )
 
   return (
     <Paper
@@ -250,18 +277,18 @@ export const AppHeader = ({ location }) => {
       >
         <Stack direction='row' alignItems='center' spacing={1.5}>
           <AppLogo
-            component={Link}
+            component='a'
             href='/posts'
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           />
 
-          {isDesktop ? <DesktopMenu /> : null}
+          {isDesktop ? <HeaderDesktopNav location={location} /> : null}
         </Stack>
 
         {isDesktop ? (
           <Stack direction='row' spacing={1} alignItems='center'>
             <Button
-              component={Link}
+              component='a'
               href={currentPath}
               variant='outlined'
               color='success'
@@ -271,12 +298,26 @@ export const AppHeader = ({ location }) => {
               Обновить
             </Button>
 
-            <Button component={Link} href='/api/logout' variant='outlined' size='small' color='error' startIcon={<Logout />}>
+            <Button
+              component='a'
+              href='/api/logout'
+              variant='outlined'
+              size='small'
+              color='error'
+              startIcon={<Logout />}
+            >
               Выйти
             </Button>
           </Stack>
         ) : (
-          <MobileMenu />
+          <HeaderMobileNav
+            location={location}
+            currentPath={currentPath}
+            navMenuAnchorEl={navMenuAnchorEl}
+            isNavMenuOpen={isNavMenuOpen}
+            onOpenNavMenu={handleOpenNavMenu}
+            onCloseNavMenu={handleCloseNavMenu}
+          />
         )}
       </Stack>
     </Paper>

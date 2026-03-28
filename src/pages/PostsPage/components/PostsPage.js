@@ -96,7 +96,7 @@ export const PostsPage = ({ page, totalPages, totalPosts, posts }) => {
     <MainLayout>
       <Stack spacing={2}>
         <TitleSummary>всего постов: {totalPosts}</TitleSummary>
-        
+
         {posts.length ? (
           <>
             <StyledPagination page={page} totalPages={totalPages} basePath='/posts' />

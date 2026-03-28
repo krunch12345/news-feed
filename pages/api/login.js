@@ -1,5 +1,6 @@
 import { checkLoginCredentials } from '@/lib/auth'
 import { appConfig } from '@/lib/config'
+import { buildSetSessionUserCookieHeader } from '@/lib/sessionCookie'
 
 const handler = async (req, res) => {
   if (req.method !== 'POST') {
@@ -15,7 +16,7 @@ const handler = async (req, res) => {
     return
   }
 
-  res.setHeader('Set-Cookie', `session_user=${encodeURIComponent(appConfig.authUser)}; Path=/; HttpOnly; SameSite=Lax`)
+  res.setHeader('Set-Cookie', buildSetSessionUserCookieHeader(appConfig.authUser))
   res.redirect(303, '/')
 }
 

@@ -61,7 +61,7 @@ export const ImagePreviewModal = ({ previewImageUrl, previewImages, onClose, onP
               borderRadius: 1,
             }}
           />
-          
+
           {previewImages.length > 1 ? (
             <IconButton color='success' onClick={onNext}>
               <ChevronRight />

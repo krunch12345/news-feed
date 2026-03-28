@@ -8,7 +8,7 @@ const NotFoundPage = () => (
     <Typography variant='h4'>Страница не найдена</Typography>
 
     <Typography color='text.secondary'>Проверьте адрес или вернитесь на страницу постов.</Typography>
-    
+
     <Button component={Link} href='/posts' variant='contained' color='success' startIcon={<DynamicFeed />}>
       Перейти к постам
     </Button>

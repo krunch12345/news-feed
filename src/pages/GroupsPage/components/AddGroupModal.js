@@ -58,7 +58,7 @@ export const AddGroupModal = ({
         <TextField label='ID сообщества' value={groupId} onChange={onGroupIdChange} fullWidth />
 
         <TextField label='Название (необязательно)' value={groupName} onChange={onGroupNameChange} fullWidth />
-        
+
         {groupError ? <Alert severity='error'>{groupError}</Alert> : null}
       </Stack>
     </DialogContent>

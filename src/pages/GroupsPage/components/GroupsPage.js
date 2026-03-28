@@ -129,7 +129,7 @@ export const GroupsPage = ({ groups, groupQuery, totalGroups }) => {
         <form action='/groups' method='get'>
           <Stack direction='row' spacing={1}>
             <TextField name='group_query' defaultValue={groupQuery} placeholder='Поиск по названию или ID' size='small' fullWidth />
-            
+
             <IconButton type='submit' color='success' aria-label='Искать' sx={{ backgroundColor: 'transparent' }}>
               <Search />
             </IconButton>
@@ -167,7 +167,7 @@ export const GroupsPage = ({ groups, groupQuery, totalGroups }) => {
         onClose={closeConfirmDialog}
         onConfirm={onDeleteConfirm}
       />
-      
+
       <AddGroupModal
         open={isGroupDialogOpen}
         groupId={groupId}
