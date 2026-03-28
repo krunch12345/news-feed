@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { CssBaseline, ThemeProvider, createTheme } from '@mui/material'
+import Head from 'next/head'
 import { useRouter } from 'next/router'
+import { getDocumentTitle } from '@/common/constants/documentTitle'
 import PropTypes from 'prop-types'
 import { AppAlert } from '@/common/components/AppAlert'
 import { LoadingBackdrop } from '@/common/components/LoadingBackdrop'
@@ -92,6 +94,11 @@ const App = ({ Component, pageProps }) => {
   const autoHideDuration = useMemo(
     () => (alertState.severity === 'error' ? 10000 : 5000),
     [alertState.severity],
+  )
+
+  const documentTitle = useMemo(
+    () => getDocumentTitle(router.pathname),
+    [router.pathname],
   )
 
   useEffect(() => {
@@ -192,6 +199,10 @@ const App = ({ Component, pageProps }) => {
 
   return (
     <ThemeProvider theme={theme}>
+      <Head>
+        <title>{documentTitle}</title>
+      </Head>
+      
       <AppAlertContext.Provider value={{ showAlert }}>
         <CssBaseline />
         <LoadingBackdrop open={isGlobalLoading} />
