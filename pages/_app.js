@@ -201,6 +201,15 @@ const App = ({ Component, pageProps }) => {
     <ThemeProvider theme={theme}>
       <Head>
         <title>{documentTitle}</title>
+        <meta name="theme-color" content="#181a1f" />
+        <link
+          rel="icon"
+          type="image/png"
+          sizes="32x32"
+          href="/favicon-32x32.png"
+        />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/site.webmanifest" />
       </Head>
       
       <AppAlertContext.Provider value={{ showAlert }}>
