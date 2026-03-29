@@ -6,10 +6,20 @@ import { loadGroups, loadPosts, savePosts, loadSchedule } from './storage.js'
 
 const maxImagesPerPost = 10
 
+const resolvePostsImagesDir = () =>
+  path.isAbsolute(appConfig.postsImagesDir)
+    ? appConfig.postsImagesDir
+    : path.resolve(appConfig.rootDir, appConfig.postsImagesDir)
+
+const logImage = (message) => {
+  process.stderr.write(`[news-feed images] ${message}\n`)
+}
+
 const downloadPostImages = async (post) => {
   const images = []
   const attachments = post?.attachments || []
   const postId = String(post?.id || '')
+  const targetDir = resolvePostsImagesDir()
 
   for (let index = 0; index < attachments.length; index += 1) {
     if (images.length >= maxImagesPerPost) {
@@ -17,19 +27,23 @@ const downloadPostImages = async (post) => {
     }
 
     const attachment = attachments[index]
-    if (attachment?.type !== 'photo' || !attachment?.url) {
+    if (attachment?.type !== 'photo') {
+      continue
+    }
+    if (!attachment?.url) {
+      logImage(`post ${postId} attachment #${index}: type photo but no URL (VK payload missing sizes/orig_photo?)`)
       continue
     }
 
     const filename = `${postId.replaceAll('-', '_')}_${index}.jpg`
-    const localPath = path.join(appConfig.postsImagesDir, filename)
+    const localPath = path.join(targetDir, filename)
 
     try {
       await fs.access(localPath)
       images.push(filename)
       continue
-    } catch (error) {
-      void error
+    } catch {
+      // file missing, download below
     }
 
     try {
@@ -40,14 +54,16 @@ const downloadPostImages = async (post) => {
         },
       })
       if (!response.ok) {
+        logImage(`post ${postId} fetch ${response.status} ${response.statusText} — ${attachment.url.slice(0, 120)}`)
         continue
       }
       const arrayBuffer = await response.arrayBuffer()
-      await fs.mkdir(appConfig.postsImagesDir, { recursive: true })
+      await fs.mkdir(targetDir, { recursive: true })
       await fs.writeFile(localPath, Buffer.from(arrayBuffer))
       images.push(filename)
     } catch (error) {
-      void error
+      const msg = error instanceof Error ? error.message : String(error)
+      logImage(`post ${postId} save failed (${localPath}): ${msg}`)
     }
   }
 
@@ -67,9 +83,14 @@ export const updatePostsStorage = async () => {
   const recentFetched = fetchedPosts.filter((post) => Number(post?.date) >= threshold)
 
   const newPosts = []
+  let loggedImagesDir = false
   for (const post of recentFetched) {
     if (existingIds.has(String(post.id))) {
       continue
+    }
+    if (!loggedImagesDir) {
+      process.stderr.write(`[news-feed] saving images under: ${resolvePostsImagesDir()} (cwd=${appConfig.rootDir})\n`)
+      loggedImagesDir = true
     }
     const postImages = await downloadPostImages(post)
     if (postImages.length) {
@@ -79,6 +100,11 @@ export const updatePostsStorage = async () => {
   }
 
   if (!newPosts.length) {
+    if (recentFetched.length > 0) {
+      process.stderr.write(
+        '[news-feed] no new posts to save (all fetched wall items already in posts.json); images are only downloaded for newly added posts\n',
+      )
+    }
     return 0
   }
 
