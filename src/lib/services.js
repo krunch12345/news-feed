@@ -33,7 +33,12 @@ const downloadPostImages = async (post) => {
     }
 
     try {
-      const response = await fetch(attachment.url)
+      const response = await fetch(attachment.url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; NewsFeed/1.0)',
+          Accept: 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
+        },
+      })
       if (!response.ok) {
         continue
       }

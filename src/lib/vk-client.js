@@ -30,16 +30,41 @@ const callVkMethod = async (method, params) => {
   throw new Error('VK API failed after retries')
 }
 
+const pickPhotoUrl = (photo) => {
+  if (!photo || typeof photo !== 'object') {
+    return ''
+  }
+  if (photo.orig_photo?.url) {
+    return photo.orig_photo.url
+  }
+  const legacyKeys = ['photo_2560', 'photo_1280', 'photo_807', 'photo_604', 'photo_130', 'photo_75']
+  for (const key of legacyKeys) {
+    const candidate = photo[key]
+    if (typeof candidate === 'string' && candidate.startsWith('http')) {
+      return candidate
+    }
+  }
+  const sizes = Array.isArray(photo.sizes) ? photo.sizes : []
+  const best = sizes.reduce(
+    (acc, item) => {
+      const score = (item?.width || 0) * (item?.height || 0)
+      return score > acc.score ? { score, url: item?.url || '' } : acc
+    },
+    { score: 0, url: '' },
+  )
+  return best.url || ''
+}
+
 const mapAttachments = (rawAttachments = []) => {
   return rawAttachments.map((att) => {
     const type = att?.type
     if (type === 'photo') {
-      const sizes = att?.photo?.sizes || []
-      const best = sizes.reduce((acc, item) => {
-        const score = (item?.width || 0) * (item?.height || 0)
-        return score > acc.score ? { score, url: item.url } : acc
-      }, { score: 0, url: '' })
-      return best.url ? { type: 'photo', url: best.url } : { type: 'photo' }
+      const url = pickPhotoUrl(att?.photo)
+      return url ? { type: 'photo', url } : { type: 'photo' }
+    }
+    if (type === 'posted_photo') {
+      const url = pickPhotoUrl(att?.posted_photo)
+      return url ? { type: 'photo', url } : { type: 'photo' }
     }
     if (type === 'audio') {
       const artist = att?.audio?.artist || ''
