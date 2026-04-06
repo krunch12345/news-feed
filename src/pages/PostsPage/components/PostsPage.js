@@ -1,11 +1,11 @@
 import { Children, useMemo, useState } from 'react'
 import PropTypes from 'prop-types'
+import { useRouter } from 'next/router'
 import { Stack, Typography } from '@mui/material'
 import { DeleteConfirmModal } from '@/common/components/DeleteConfirmModal/components/DeleteConfirmModal'
 import { buildDeleteDialogText } from '@/common/components/DeleteConfirmModal/utils/buildDeleteDialogText'
 import { StyledPagination } from '@/common/components/StyledPagination/components/StyledPagination'
 import { TitleSummary } from '@/common/components/TitleSummary/components/TitleSummary'
-import { RELOAD_DELAY_MS } from '@/common/constants/loadingTimings'
 import { useAppAlert } from '@/common/hooks/useAppAlert'
 import { MainLayout } from '@/layouts/MainLayout/components/MainLayout'
 import { ImagePreviewModal } from '@/pages/PostsPage/components/ImagePreviewModal'
@@ -17,19 +17,25 @@ import { buildPostText } from '@/pages/PostsPage/utils/buildPostText'
  * Renders the main posts page component.
  * @param {object} props Component props.
  * @param {number} props.page Current page number.
- * @param {number} props.totalPages Total number of pages.
+ * @param {number} props.totalPages Total number of pages from SSR (used until local totals diverge).
  * @param {number} props.totalPosts Total number of posts.
+ * @param {number} props.pageSize Posts per page.
  * @param {object[]} props.posts List of post view models.
  * @returns {JSX.Element} Posts page component.
  */
-export const PostsPage = ({ page, totalPages, totalPosts, posts }) => {
+export const PostsPage = ({ page, totalPages: _totalPagesSsr, totalPosts, pageSize, posts: postsProp }) => {
+  const router = useRouter()
   const { showAlert } = useAppAlert()
   const [confirmState, setConfirmState] = useState({ type: '', value: '' })
   const [previewImages, setPreviewImages] = useState([])
   const [previewImageIndex, setPreviewImageIndex] = useState(0)
+  const [posts, setPosts] = useState(postsProp)
+  const [totalPostsState, setTotalPostsState] = useState(totalPosts)
 
   const previewImageUrl = previewImages[previewImageIndex] || ''
   const deleteDialogText = useMemo(() => buildDeleteDialogText(confirmState, posts, []), [confirmState, posts])
+
+  const totalPages = Math.max(1, Math.ceil(totalPostsState / pageSize))
 
   useImagePreviewHotkeys({
     previewImageUrl,
@@ -38,23 +44,58 @@ export const PostsPage = ({ page, totalPages, totalPosts, posts }) => {
   })
 
   const onDeleteConfirm = async () => {
-    if (confirmState.value) {
-      try {
-        const response = await fetch(`/api/delete/${encodeURIComponent(confirmState.value)}`, { method: 'POST' })
-        const data = await response.json().catch(() => null)
+    const postIdToDelete = confirmState.value
+    if (!postIdToDelete) {
+      return
+    }
 
-        if (!response.ok) {
-          showAlert('error', data?.message || 'Ошибка при удалении поста')
-          return
-        }
+    try {
+      const response = await fetch(`/api/delete/${encodeURIComponent(postIdToDelete)}`, { method: 'POST' })
+      const data = await response.json().catch(() => null)
 
-        showAlert('success', 'Пост удален', { persistOnReload: true })
-        window.setTimeout(() => {
-          window.location.reload()
-        }, RELOAD_DELAY_MS)
-      } catch {
-        showAlert('error', 'Ошибка при удалении поста')
+      if (!response.ok) {
+        showAlert('error', data?.message || 'Ошибка при удалении поста')
+        return
       }
+
+      const serverTotal = Number(data?.totalPosts)
+      if (!Number.isFinite(serverTotal)) {
+        showAlert('error', 'Некорректный ответ сервера')
+        return
+      }
+
+      setConfirmState({ type: '', value: '' })
+
+      const totalPagesAfter = Math.max(1, Math.ceil(serverTotal / pageSize))
+
+      if (page > totalPagesAfter) {
+        showAlert('success', 'Пост удален')
+        await router.replace(`/posts?page=${totalPagesAfter}`)
+        return
+      }
+
+      let nextPosts = posts.filter((p) => String(p.id) !== String(postIdToDelete))
+
+      if (nextPosts.length === 0 && page > 1) {
+        showAlert('success', 'Пост удален')
+        await router.replace(`/posts?page=${page - 1}`)
+        return
+      }
+
+      if (nextPosts.length < pageSize && (page - 1) * pageSize + nextPosts.length < serverTotal) {
+        const offset = (page - 1) * pageSize + nextPosts.length
+        const sliceRes = await fetch(`/api/posts/slice?offset=${offset}&limit=1`)
+        const sliceData = await sliceRes.json().catch(() => null)
+        if (sliceRes.ok && sliceData?.posts?.[0]) {
+          nextPosts = [...nextPosts, sliceData.posts[0]]
+        }
+      }
+
+      setPosts(nextPosts)
+      setTotalPostsState(serverTotal)
+      showAlert('success', 'Пост удален')
+    } catch {
+      showAlert('error', 'Ошибка при удалении поста')
     }
   }
 
@@ -95,7 +136,7 @@ export const PostsPage = ({ page, totalPages, totalPosts, posts }) => {
   return (
     <MainLayout>
       <Stack spacing={2}>
-        <TitleSummary>всего постов: {totalPosts}</TitleSummary>
+        <TitleSummary>всего постов: {totalPostsState}</TitleSummary>
 
         {posts.length ? (
           <>
@@ -132,6 +173,7 @@ PostsPage.propTypes = {
   page: PropTypes.number.isRequired,
   totalPages: PropTypes.number.isRequired,
   totalPosts: PropTypes.number.isRequired,
+  pageSize: PropTypes.number.isRequired,
   posts: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.string.isRequired,

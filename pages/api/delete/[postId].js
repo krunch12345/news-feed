@@ -18,8 +18,12 @@ const handler = async (req, res) => {
   }
 
   try {
-    await deletePostById(postId)
-    res.status(200).json({ status: 'ok' })
+    const result = await deletePostById(postId)
+    if (!result.deleted) {
+      res.status(404).json({ status: 'error', message: 'Пост не найден' })
+      return
+    }
+    res.status(200).json({ status: 'ok', totalPosts: result.totalPosts })
   } catch {
     res.status(500).json({ status: 'error', message: 'Не удалось удалить пост' })
   }

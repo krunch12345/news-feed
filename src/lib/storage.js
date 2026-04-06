@@ -71,6 +71,11 @@ export const loadSchedule = async () => {
 
 export const saveSchedule = async (times) => safeSaveJson(scheduleFile, times)
 
+/**
+ * Removes a post by id and its image files from disk.
+ * @param {string} postId Post id.
+ * @returns {Promise<{ deleted: false } | { deleted: true, totalPosts: number }>}
+ */
 export const deletePostById = async (postId) => {
   const posts = await loadPosts()
   const keep = []
@@ -89,7 +94,7 @@ export const deletePostById = async (postId) => {
   }
 
   if (keep.length === posts.length) {
-    return false
+    return { deleted: false }
   }
 
   await Promise.all(
@@ -100,5 +105,5 @@ export const deletePostById = async (postId) => {
   )
 
   await savePosts(keep)
-  return true
+  return { deleted: true, totalPosts: keep.length }
 }
